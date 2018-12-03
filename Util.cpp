@@ -97,7 +97,7 @@ void saveVTKFile(std::vector<std::vector<double>>& phi_v, std::string saveSolFil
   saveSol.close();
 }
 
-void readVTKFile(field& phi, std::string fileName)
+std::vector<std::vector<double>> readVTKFile(std::vector<std::vector<double>>& phi_v, std::string fileName)
 {
   ifstream file(fileName.data());
   if (!file.is_open())
@@ -119,7 +119,10 @@ void readVTKFile(field& phi, std::string fileName)
     if (fileLine.find("DATASET STRUCTURED_POINTS") != std::string::npos)
     {
       file >> temp >> Nx >> Ny >> Nz;
-      phi.resize(Ny,Nx);
+      phi_v.resize(Ny);
+      for (size_t i = 0; i < Ny; i++) {
+        phi_v[i].resize(Nx);
+      }
     }
 
     if (fileLine.find("LOOKUP_TABLE default") != std::string::npos)
@@ -128,9 +131,10 @@ void readVTKFile(field& phi, std::string fileName)
       {
         for(int j=0; j<Nx; j++)
         {
-          file >> phi(i,j);
+          file >> phi_v[i][j];
         }
       }
     }
   }
+  return phi_v;
 }

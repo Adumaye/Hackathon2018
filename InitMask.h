@@ -4,25 +4,21 @@
 
 #ifndef _MASK_H
 
-#include "Dense"
-#include "LevelSet.h"
+#include <iostream>
+#include <fstream>
+#include <vector>
 
-typedef Eigen::Array<double, Eigen::Dynamic, Eigen::Dynamic> field;
+using namespace std;
 
 class InitMask
 {
 private:
-  // Matrice représentant le masque redistancié
-  field  _M ;
 
 public:
   InitMask();
   // Construit le masque et le redistancie si il n'existe pas déjà
-  void BuildMaskAndRedistancing(int rows, int cols, std::string nameMaskRedist);
-  // Renvoie le masque
-  const field & GetRedistMask(){return _M;};
+  std::vector<std::vector<double>> BuildMaskAndRedistancing(int rows, int cols, std::string nameMaskRedist);
 };
-
 
 #define _MASK_H
 #endif

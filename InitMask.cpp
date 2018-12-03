@@ -4,21 +4,23 @@
 
 #include "InitMask.h"
 #include "Util.h"
-
+#include "LevelSet_v.h"
 #include <iostream>
 #include <fstream>
 
 using namespace std;
 
-InitMask::InitMask(){}
+InitMask::InitMask(){};
 
-void InitMask::BuildMaskAndRedistancing(int rows, int cols, std::string nameMaskRedist)
+std::vector<std::vector<double>> InitMask::BuildMaskAndRedistancing(int rows, int cols, std::string nameMaskRedist)
 {
+  std::vector<std::vector<double>> M_v;
   std::ifstream file(nameMaskRedist.data());
   if (file)
   {
-    readVTKFile(_M, nameMaskRedist);
-    if ( (_M.rows() != rows) || (_M.cols() != cols) )
+    M_v=readVTKFile(M_v, nameMaskRedist);
+
+    if ( (M_v.size() != rows) || (M_v[0].size() != cols) )
     {
       std::cout << "The initialization " << nameMaskRedist << " does not correspond to the image (size problem)." << std::endl;
       abort();
@@ -34,17 +36,26 @@ void InitMask::BuildMaskAndRedistancing(int rows, int cols, std::string nameMask
       cols = rows;
       rows = temp;
     }
-    _M = (Eigen::MatrixXd::Ones(rows,cols)).array();
 
-    _M *= (-1);
+    M_v.resize(rows);
+    for (size_t i = 0; i < rows; i++)
+    {
+      M_v[i].resize(cols);
+    }
+
     int num_of_circles = 2;
     const double radius = rows/(3.*num_of_circles+1.);
     int num_cols = floor(cols/(3.*radius));
     double dist = (cols-num_cols*2.*radius)/(1.0+num_cols);
+
+    // #pragma acc parallel loop reduction(+:M_v)
+    std:: cout << M_v.size() << " " << M_v[0].size()<< std::endl;
+
     for(int i=0; i<rows; i++)
     {
       for(int j=0; j<cols; j++)
       {
+        M_v[i][j]=0;
         for (int k=0; k<num_cols; k++)
         {
           for (int l=0; l<num_of_circles; l++)
@@ -53,20 +64,23 @@ void InitMask::BuildMaskAndRedistancing(int rows, int cols, std::string nameMask
             double cx((2+3*l)*radius);
             if  (sqrt((i-cx)*(i-cx)+(j-cy)*(j-cy)) < radius)
             {
-              _M(i,j) = 1;
+              M_v[i][j] = 1;
+            }
+            else
+            {
+              M_v[i][j]=-1;
             }
           }
         }
       }
     }
-    if (is_ok == false)
-    {
-      _M = _M.transpose();
-    }
 
     std::cout << "Redistanciation en cours ... " << std::endl;
-    LevelSet lv(_M);
-    lv.redistancing(200);
-    saveVTKFile(_M, nameMaskRedist);
+
+    LevelSet_v lv(M_v);
+    lv.redistancing_v(200);
+    saveVTKFile(M_v, nameMaskRedist);
+
   }
+  return M_v;
 }

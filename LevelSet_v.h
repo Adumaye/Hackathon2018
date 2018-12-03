@@ -1,11 +1,12 @@
 #ifndef LEVELSET_H_v
 #define LEVELSET_H_v
 
-//#include "Dense"
-#include "Image.h"
+#include <vector>
+#include <iostream>
+#include <fstream>
 #include "float.h"
 
-// using namespace std;
+using namespace std;
 
 class LevelSet_v
 {
@@ -39,7 +40,7 @@ private:
       LevelSet_v(std::vector<std::vector<double>>& phi_v):_phi_v(phi_v){}
       ~LevelSet_v() = default;
       void redistancing_v(const int max_iter);
-      void redistancing_v(const double eps);
+      // void redistancing_v(const double eps);
 
       double fmax(const std::vector<std::vector<double>>& v) const;
       double fmin(const std::vector<std::vector<double>>& v) const;

@@ -52,43 +52,31 @@ int main(int argc, char** argv)
   std::cout << "Construction ou lecture du masque redistancié" << std::endl;
   InitMask* initMask = new InitMask();
   int rows(image->GetImage().rows()), cols(image->GetImage().cols());
-  initMask->BuildMaskAndRedistancing(rows, cols, imagemaskdistance);
-  std::cout << "-------------------------------------------------" << std::endl;
+  std::vector< std::vector<double>> phi_v = initMask->BuildMaskAndRedistancing(rows, cols, imagemaskdistance);
 
   // Chan Vese method
   std::cout << "-------------------------------------------------" << std::endl;
   std::cout << "Initialisation de la méthode de Chan Vese" << std::endl;
   ChanVeseSchemes* chanVese=new ChanVeseSchemes(image);
-  field phi(initMask->GetRedistMask());
-  saveVTKFile(phi, "Results/sol_0.vtk");
+
+  saveVTKFile(phi_v, "Results/sol_0.vtk");
   std::cout << "-------------------------------------------------" << std::endl;
 
   std::cout << "Iteration -- 1" << std::endl;
 
-  //Recopiage du phi de EIGEN dans un phi Vector
-  std::vector< std::vector<double> >  phi_v;
-
-  phi_v.resize(phi.rows());
-  for (int i=0;i<phi.rows() ;i++) { phi_v[i].resize(phi.cols()); }
-
-  for (int i=0 ; i < phi.rows(); i++)
-  {
-    for (int j=0 ; j < phi.cols(); j++)
-    {
-      phi_v[i][j]=phi(i,j);
-    }
-  }
-
   std::vector< std::vector <double> > newphi_v;
 
-  newphi_v.resize(phi.rows());
-  for (int i=0;i<newphi_v.size() ;i++) { phi_v[i].resize(phi.cols()); }
+  newphi_v.resize(phi_v.size());
+  for (int i=0;i<newphi_v.size() ;i++) { phi_v[i].resize(phi_v[0].size()); }
 
   std::string scheme(c.scheme);
 
   double C1(0.);
   double C2(0.);
   std::pair<double,double> Correction;
+
+//Début du Temps
+  auto start = chrono::high_resolution_clock::now();
 
   if (scheme == "ExplicitScheme")
   {
@@ -97,7 +85,6 @@ int main(int argc, char** argv)
     C1= Correction.first;
     C2= Correction.second;
     newphi_v = chanVese->ExplicitScheme(phi_v,c.dt,c.mu,c.nu,c.l1,c.l2, C1, C2);
-    std::cout << "Explicit scheme fin" << std::endl;
 
     // CL
     int nx(phi_v.size());
@@ -114,19 +101,14 @@ int main(int argc, char** argv)
       newphi_v[i][0]  = newphi_v[i][1];
       newphi_v[i][ny-1] = newphi_v[i][ny-2];
     }
-    std::cout << "CL fin" << std::endl;
-
     // Fin CL
-
-
   }
   else
   {
     std::cout << "Seulement le schéma ExplicitScheme est implémenté." << std::endl;
   }
   double diff = chanVese->fdiff(phi_v, newphi_v);
-  // double diff = (((newphi>=0).cast<double>()-0.5)*2. - ((phi>=0).cast<double>()-0.5)*2.).matrix().norm()
-  // /(phi.rows()*phi.cols());
+
   phi_v = newphi_v;
   int i(2);
   while ( (diff > 5e-6) && (i < 100) )
@@ -157,11 +139,9 @@ int main(int argc, char** argv)
       // Fin CL
 
       diff = chanVese->fdiff(phi_v, newphi_v);
-      // diff = (((newphi>=0).cast<double>()-0.5)*2. - ((phi>=0).cast<double>()-0.5)*2.).matrix().norm()
-      // /(phi.rows()*phi.cols());
+
       if (i%10 == 0)
       {
-        // newphi = ((newphi>=0).cast<double>()-0.5)*2;
         for (int i=0 ; i < newphi_v.size(); i++)
         {
           for (int j=0 ; j < newphi_v[0].size(); j++)
@@ -190,10 +170,15 @@ int main(int argc, char** argv)
   }
 
   newphi = ((newphi>=0).cast<double>()-0.5)*2;
-  saveVTKFile(newphi, "Results/lastsol.vtk");
+  saveVTKFile(phi_v, "Results/lastsol.vtk");
   image->WriteImage(chanVese->AbsGradPhi(newphi), (namewithoutextension + "_filtered_with_contour." + extension).c_str());
 
-  cout << "Fin de la segmentation pour l'image." << endl;
+  cout << "Fin de la segmentation pour l'image. !****Et bravo à Annabelle pour la petite Lise.****!" << endl;
+  // Fin chrono
+  auto finish = chrono::high_resolution_clock::now();
+  double t = chrono::duration_cast<chrono::microseconds>(finish-start).count();
+  cout << "Le prog a mis " << t*0.000001 << " secondes a s'effectuer" << endl;
+
 
   return 0;
 }

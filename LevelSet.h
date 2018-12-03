@@ -1,10 +1,12 @@
 #ifndef LEVELSET_H
 #define LEVELSET_H
 
-//#include "Dense"
-#include "Image.h"
+// #include "Image.h"
+#include "Dense"
+#include <vector>
 #include <iostream>
 
+using namespace std;
 
 typedef Eigen::Array<double, Eigen::Dynamic, Eigen::Dynamic> field;
 
@@ -46,7 +48,6 @@ private:
       LevelSet(field& phi):_phi(phi){}
       ~LevelSet() = default;
       void redistancing(const int max_iter);
-      void redistancing(const double eps);
 
       field curvature() const;
       field check() const;
