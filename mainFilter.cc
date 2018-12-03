@@ -41,5 +41,7 @@ int main(int argc, char** argv)
 
   //image->WriteImage();
 
+	MPI_Finalize();
+
 	return 0;
 }
