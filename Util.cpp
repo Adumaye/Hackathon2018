@@ -39,7 +39,7 @@ void parseFile(char* filename, config_t&c)
   }
 }
 
-// Écriture d'une matrice eigen ou d'un tableau dans un fichier
+// Écriture d'une matrice ou d'un tableau dans un fichier
 void saveVTKFile(const field& phi, std::string saveSolFileName)
 {
   ofstream saveSol;
@@ -61,35 +61,6 @@ void saveVTKFile(const field& phi, std::string saveSolFileName)
     for(int j=0; j<phi.cols(); j++)
     {
       saveSol << phi(i,j) << " ";
-    }
-  }
-  saveSol << endl;
-  saveSol.close();
-}
-
-
-// Écriture d'une matrice ou d'un tableau dans un fichier
-void saveVTKFile(std::vector<std::vector<double>>& phi_v, std::string saveSolFileName)
-{
-  ofstream saveSol;
-  saveSol.open(saveSolFileName, ios::out);
-
-  saveSol << "# vtk DataFile Version 3.0" << endl;
-  saveSol << "cell" << endl;
-  saveSol << "ASCII" << endl;
-  saveSol << "DATASET STRUCTURED_POINTS" << endl;
-  saveSol << "DIMENSIONS " << phi_v.size() << " " << phi_v[0].size() << " " << 1 << endl;
-  saveSol << "ORIGIN " << 0 << " " << 0 << " " << 0 << endl;
-  saveSol << "SPACING " << 1.0 << " " << 1.0 << " " << 1 << endl;;
-  saveSol << "POINT_DATA " <<  phi_v.size()*phi_v[0].size() << endl;
-  saveSol << "SCALARS cell float" << endl;
-  saveSol << "LOOKUP_TABLE default" << endl;
-
-  for(int i=0; i<phi_v.size(); i++)
-  {
-    for(int j=0; j<phi_v[0].size(); j++)
-    {
-      saveSol << phi_v[i][j] << " ";
     }
   }
   saveSol << endl;
