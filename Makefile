@@ -2,10 +2,10 @@
 CC = mpic++
 
 # Options en mode optimisé - La variable DEBUG est définie comme fausse
-OPTIM_FLAG = -O3 -DNDEBUG -w -I Eigen/Eigen -std=c++11
+OPTIM_FLAG = -O3 -DNDEBUG -w -I Eigen/Eigen -std=c++11 -acc -ta=tesla:managed
 
 # Options en mode debug - La variable DEBUG est définie comme vraie
-DEBUG_FLAG = -g3 -DDEBUG  -I Eigen/Eigen -ltiff -lm -lpthread -std=c++11 -w
+DEBUG_FLAG = -g3 -DDEBUG  -I Eigen/Eigen -ltiff -lm -lpthread -std=c++11 -w -acc -ta=tesla:managed
 
 # Librairies à linker (création executable)
 LIB = -ltiff -lm -lpthread
@@ -14,7 +14,7 @@ LIB = -ltiff -lm -lpthread
 CXX_FLAGS = $(OPTIM_FLAG)
 
 #Plafrim
-PLAFRIM_FLAG = -O3 -DNDEBUG -w -I eigen/Eigen -DEIGEN_DONT_VECTORIZE -std=c++11
+PLAFRIM_FLAG = -O3 -DNDEBUG -w -I eigen/Eigen -DEIGEN_DONT_VECTORIZE -std=c++11 -acc -ta=tesla:managed
 
 # Le nom de l'exécutable
 PROGFilter = mainFilter
