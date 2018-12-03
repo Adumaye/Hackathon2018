@@ -40,5 +40,8 @@ all : $(PROGFilter) $(PROGSegmentation)
 
 # Supprime l'exécutable, les fichiers binaires (.o) et les fichiers
 # temporaires de sauvegarde (~)
+# Supprime aussi les fichiers fileint1_aft_preprocess_filtered.tiff fileint1_aft_preprocess_filtered_distance_mask.vtk et fileint1_aft_preprocess_filtered_with_contour.tiff
+# (ce qui évite d'avoir à les supprimer soit même lorsque l'on veut tester le code)
 clean :
 	rm -f *.o *~ $(PROGFilter) *~ $(PROGSegmentation)
+	rm -f ../Images/fileint1_aft_preprocess_*

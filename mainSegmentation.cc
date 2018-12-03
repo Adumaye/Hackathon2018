@@ -79,9 +79,6 @@ int main(int argc, char** argv)
     }
   }
 
-  double C1,C2;
-  (C1,C2)= chanVese->Correction(phi_v);
-
   std::vector< std::vector <double> > newphi_v;
 
   newphi_v.resize(phi.rows());
@@ -92,23 +89,7 @@ int main(int argc, char** argv)
   if (scheme == "ExplicitScheme")
   {
     std::cout << "Explicit scheme" << std::endl;
-    newphi_v = chanVese->ExplicitScheme(phi_v,c.dt,c.mu,c.nu,c.l1,c.l2,C1,C2);
-    // // CL
-    int nx= phi_v.size();
-    int ny= phi_v[0].size();
-
-    for (int j=0; j<ny; ++j)
-    {
-      newphi_v[0][j]  = newphi_v[1][j];
-      newphi_v[nx][j] = newphi_v[nx-1][j];
-    }
-
-    for (int i=0; i<nx; ++i)
-    {
-      newphi_v[i][0]  = newphi_v[i][1];
-      newphi_v[i][ny] = newphi_v[i][ny-1];
-    }
-    // // Fin CL
+    newphi_v = chanVese->ExplicitScheme(phi_v,c.dt,c.mu,c.nu,c.l1,c.l2);
 
   }
   else
@@ -125,24 +106,7 @@ int main(int argc, char** argv)
     if (i%10 == 0) { std::cout << "Iteration -- " << i << std::endl;}
     if (scheme == "ExplicitScheme")
     {
-      (C1,C2)= chanVese->Correction(phi_v);
-      newphi_v = chanVese->ExplicitScheme(phi_v,c.dt,c.mu,c.nu,c.l1,c.l2,C1,C2);
-      // // CL
-      int nx= phi_v.size();
-      int ny= phi_v[0].size();
-
-      for (int j=0; j<ny; ++j)
-      {
-        newphi_v[0][j]  = newphi_v[1][j];
-        newphi_v[nx][j] = newphi_v[nx-1][j];
-      }
-
-      for (int i=0; i<nx; ++i)
-      {
-        newphi_v[i][0]  = newphi_v[i][1];
-        newphi_v[i][ny] = newphi_v[i][ny-1];
-      }
-      // // Fin CL
+      newphi_v = chanVese->ExplicitScheme(phi_v,c.dt,c.mu,c.nu,c.l1,c.l2);
 
       diff = chanVese->fdiff(phi_v, newphi_v);
       // diff = (((newphi>=0).cast<double>()-0.5)*2. - ((phi>=0).cast<double>()-0.5)*2.).matrix().norm()
@@ -152,7 +116,7 @@ int main(int argc, char** argv)
         // newphi = ((newphi>=0).cast<double>()-0.5)*2;
         for (int i=0 ; i < newphi_v.size(); i++)
         {
-          for (int j=0 ; j < newphi_v.size(); j++)
+          for (int j=0 ; j < newphi_v[0].size(); j++)
           {
             newphi_v[i][j]=newphi_v[i][j]/abs(newphi_v[i][j]);
           }
@@ -168,10 +132,10 @@ int main(int argc, char** argv)
     }
   }
 
-  field newphi;
-  for (int i=0 ; i < phi.rows(); i++)
+  field newphi(phi_v.size(),phi_v[0].size());
+  for (int i=0 ; i < newphi_v.size(); i++)
   {
-    for (int j=0 ; j < phi.cols(); j++)
+    for (int j=0 ; j < newphi_v[0].size(); j++)
     {
       newphi(i,j) = phi_v[i][j];
     }
@@ -185,3 +149,20 @@ int main(int argc, char** argv)
 
   return 0;
 }
+
+// // CL
+// int nx= phi_v.size();
+// int ny= phi_v[0].size();
+//
+// for (int j=0; j<ny; ++j)
+// {
+//   newphi[0][j]  = newphi[1][j];
+//   newphi[nx][j] = newphi[nx-1][j];
+// }
+//
+// for (int i=0; i<nx; ++i)
+// {
+//   newphi[i][0]  = newphi[i][1];
+//   newphi[i][ny] = newphi[i][ny-1];
+// }
+// // Fin CL
