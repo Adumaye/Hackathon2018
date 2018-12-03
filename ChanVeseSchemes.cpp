@@ -10,7 +10,6 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
-#include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -108,8 +107,7 @@ double ChanVeseSchemes::fdiff(const std::vector<std::vector<double>>& phi_v, con
 		for (int j=0; j<newphi_v[0].size(); j++)
 		{
 			d+= 4.*max( -phi_v[i][j]*newphi_v[i][j]/max(-phi_v[i][j]*newphi_v[i][j], 1.E-16) , 0. );
-			//Petite modif par rapport au code d'origine : lorsque phi ou newphi était nul et que l'autre était négatif, 
-			//d était incrémenté de 4, ce qui n'est plus le cas
+			//Petite modif par rapport au code d'origine : lorsque phi ou newphi était nul et l'autre étais négatif, d était incrémenté de 4.
 		}
 	}
 	double diff = sqrt(d)/(newphi_v.size()*newphi_v[0].size());
