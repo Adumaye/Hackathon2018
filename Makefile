@@ -19,7 +19,8 @@ PLAFRIM_FLAG = -O3 -DNDEBUG -w -I eigen/Eigen -DEIGEN_DONT_VECTORIZE -std=c++11
 # Le nom de l'exécutable
 PROGFilter = mainFilter
 PROGSegmentation = mainSegmentation
-
+PROGFilterPlaf = mainFilterPlaf
+PROGSegmentationPlaf = mainSegmentationPlaf
 # Les fichiers source à compiler
 SRC = LevelSet.cpp InitMask.cpp ChanVeseSchemes.cpp Image.cpp Util.cpp LevelSet_v.cpp
 SRCMainFilter = mainFilter.cc
@@ -37,20 +38,20 @@ $(PROGFilter) : $(SRC) $(SRCMainFilter)
 	$(CC) -o $(PROGFilter) $(SRCCompilFilter) $(LIB)
 
 #Pour PlafRIM
-$(PROGSegmentation_PlafRIM) : $(SRC) $(SRCMainSegmen)
+$(PROGSegmentationPlaf) : $(SRC) $(SRCMainSegmen)
 	$(CC) -c $(SRC) $(SRCMainSegmen) $(PLAFRIM_FLAG)
 	$(CC) -o $(PROGSegmentation) $(SRCCompilSegmen) $(LIB)
 
-$(PROGFilter_PlafRIM) : $(SRC) $(SRCMainFilter)
+$(PROGFilterPlaf) : $(SRC) $(SRCMainFilter)
 	$(CC) -c $(SRC) $(SRCMainFilter) $(PLAFRIM_FLAG)
 	$(CC) -o $(PROGFilter) $(SRCCompilFilter) $(LIB)
 
 # Évite de devoir connaitre le nom de l'exécutable
-all : $(PROGFilter) $(PROGSegmentation)
+all : $(PROGFilter)	$(PROGSegmentation)
 filter : $(PROGFilter)
 segment : $(PROGSegmentation)
 
-Plafrim : $(PROGFilter_PlafRIM) $(PROGSegmentation_PlafRIM)
+plafrim : $(PROGFilterPlaf)	$(PROGSegmentationPlaf)
 
 # Supprime l'exécutable, les fichiers binaires (.o) et les fichiers
 # temporaires de sauvegarde (~)
