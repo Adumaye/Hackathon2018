@@ -45,18 +45,19 @@ public:
 	double fdiff(const std::vector<std::vector<double>> & phi_v, const std::vector<std::vector<double>>& newphi_v) const;
 
 	// Correction
-	field Correction(const field& phi, const double lambda1, const double lambda2) const;
+	std::pair<double,double> Correction(const std::vector<std::vector<double>>& phi_v);
+
 
 	// |V phi|
 	field AbsGradPhi(const field& phi) const;
 
 	// Schéma pour différences finis
 	// Explicit Scheme
-	 std::vector<std::vector<double>> ExplicitScheme(const std::vector<std::vector<double>> & phi_v, const double dt,  const double mu, const double nu, const double l1, const double l2) const;
+	std::vector<std::vector<double>> ExplicitScheme(const std::vector<std::vector<double>> & phi_v, const double dt,  const double mu, const double nu, const double l1, const double l2, const double C1, const double C2) const;
 
 	inline double fdxplus(int i,int j,const std::vector<std::vector<double>>& GrosPhi, double hx) const
 	{
-		 return (GrosPhi[i+1][j])-GrosPhi[i][j]/hx;
+		return (GrosPhi[i+1][j])-GrosPhi[i][j]/hx;
 	};
 
 	inline double fdxminus(int i,int j, const std::vector<std::vector<double>>& GrosPhi, double hx) const
