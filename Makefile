@@ -2,10 +2,10 @@
 CC = mpic++
 
 # Options en mode optimisé - La variable DEBUG est définie comme fausse
-OPTIM_FLAG = -O3 -DNDEBUG -w -I Eigen/Eigen -std=c++11 -acc -ta=tesla:managed -Minfo=accel
+OPTIM_FLAG = -O3 -DNDEBUG -w -I Eigen/Eigen -std=c++11
 
 # Options en mode debug - La variable DEBUG est définie comme vraie
-DEBUG_FLAG = -g3 -DDEBUG  -I Eigen/Eigen -ltiff -lm -lpthread -std=c++11 -w -acc -ta=tesla:managed -Minfo=accel
+DEBUG_FLAG = -g -DDEBUG  -I Eigen/Eigen -ltiff -lm -lpthread -std=c++11 -w
 
 # Librairies à linker (création executable)
 LIB = -ltiff -lm -lpthread
@@ -25,7 +25,7 @@ PROGSegmentationPlaf = mainSegmentationPlaf
 SRC = LevelSet.cpp InitMask.cpp ChanVeseSchemes.cpp Image.cpp Util.cpp LevelSet_v.cpp
 SRCMainFilter = mainFilter.cc
 SRCMainSegmen = mainSegmentation.cc
-SRCCompilFilter = mainFilter.o LevelSet.o InitMask.o ChanVeseSchemes.o Image.o Util.o
+SRCCompilFilter = mainFilter.o LevelSet.o InitMask.o ChanVeseSchemes.o Image.o Util.o LevelSet_v.o
 SRCCompilSegmen = mainSegmentation.o LevelSet.o InitMask.o ChanVeseSchemes.o Image.o Util.o LevelSet_v.o
 
 # La commande complète : compile seulement si un fichier a été modifié
