@@ -40,11 +40,11 @@ $(PROGFilter) : $(SRC) $(SRCMainFilter)
 #Pour PlafRIM
 $(PROGSegmentationPlaf) : $(SRC) $(SRCMainSegmen)
 	$(CC) -c $(SRC) $(SRCMainSegmen) $(PLAFRIM_FLAG)
-	$(CC) -o $(PROGSegmentation) $(SRCCompilSegmen) $(LIB)
+	$(CC) -o $(PROGSegmentation) $(SRCCompilSegmen) $(LIB) -ta=tesla:cc35
 
 $(PROGFilterPlaf) : $(SRC) $(SRCMainFilter)
 	$(CC) -c $(SRC) $(SRCMainFilter) $(PLAFRIM_FLAG)
-	$(CC) -o $(PROGFilter) $(SRCCompilFilter) $(LIB)
+	$(CC) -o $(PROGFilter) $(SRCCompilFilter) $(LIB) -ta=tesla:cc35
 
 # Évite de devoir connaitre le nom de l'exécutable
 all : $(PROGFilter)	$(PROGSegmentation)
