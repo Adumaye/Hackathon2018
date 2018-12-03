@@ -5,16 +5,16 @@ CC = mpic++
 OPTIM_FLAG = -O3 -DNDEBUG -w -I Eigen/Eigen -std=c++11
 
 # Options en mode debug - La variable DEBUG est définie comme vraie
-DEBUG_FLAG = -g -DDEBUG  -I Eigen/Eigen -ltiff -lm -lpthread -std=c++11
-
-#Plafrim
-PLAFRIM_FLAG = -O3 -DNDEBUG -w -I eigen/Eigen -DEIGEN_DONT_VECTORIZE -std=c++11
+DEBUG_FLAG = -g3 -DDEBUG  -I Eigen/Eigen -ltiff -lm -lpthread -std=c++11 -w
 
 # Librairies à linker (création executable)
 LIB = -ltiff -lm -lpthread
 
 # On choisit comment on compile
-CXX_FLAGS = $(OPTI_FLAG)
+CXX_FLAGS = $(OPTIM_FLAG)
+
+#Plafrim
+PLAFRIM_FLAG = -O3 -DNDEBUG -w -I eigen/Eigen -DEIGEN_DONT_VECTORIZE -std=c++11
 
 # Le nom de l'exécutable
 PROGFilter = mainFilter
@@ -37,13 +37,13 @@ $(PROGFilter) : $(SRC) $(SRCMainFilter)
 	$(CC) -o $(PROGFilter) $(SRCCompilFilter) $(LIB)
 
 #Pour PlafRIM
-	$(PROGSegmentation_PlafRIM) : $(SRC) $(SRCMainSegmen)
-		$(CC) -c $(SRC) $(SRCMainSegmen) $(PLAFRIM_FLAG)
-		$(CC) -o $(PROGSegmentation) $(SRCCompilSegmen) $(LIB)
+$(PROGSegmentation_PlafRIM) : $(SRC) $(SRCMainSegmen)
+	$(CC) -c $(SRC) $(SRCMainSegmen) $(PLAFRIM_FLAG)
+	$(CC) -o $(PROGSegmentation) $(SRCCompilSegmen) $(LIB)
 
-	$(PROGFilter_PlafRIM) : $(SRC) $(SRCMainFilter)
-		$(CC) -c $(SRC) $(SRCMainFilter) $(PLAFRIM_FLAG)
-		$(CC) -o $(PROGFilter) $(SRCCompilFilter) $(LIB)
+$(PROGFilter_PlafRIM) : $(SRC) $(SRCMainFilter)
+	$(CC) -c $(SRC) $(SRCMainFilter) $(PLAFRIM_FLAG)
+	$(CC) -o $(PROGFilter) $(SRCCompilFilter) $(LIB)
 
 # Évite de devoir connaitre le nom de l'exécutable
 all : $(PROGFilter) $(PROGSegmentation)
