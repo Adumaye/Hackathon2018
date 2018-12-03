@@ -86,10 +86,38 @@ int main(int argc, char** argv)
 
   std::string scheme(c.scheme);
 
+  double C1(0.);
+  double C2(0.);
+  std::pair<double,double> Correction;
+
   if (scheme == "ExplicitScheme")
   {
     std::cout << "Explicit scheme" << std::endl;
-    newphi_v = chanVese->ExplicitScheme(phi_v,c.dt,c.mu,c.nu,c.l1,c.l2);
+    Correction = chanVese->Correction(phi_v);
+    C1= Correction.first;
+    C2= Correction.second;
+    newphi_v = chanVese->ExplicitScheme(phi_v,c.dt,c.mu,c.nu,c.l1,c.l2, C1, C2);
+    std::cout << "Explicit scheme fin" << std::endl;
+
+    // CL
+    int nx(phi_v.size());
+  	int ny(phi_v[0].size());
+
+    for (int j=0; j<ny; ++j)
+    {
+      newphi_v[0][j]  = newphi_v[1][j];
+      newphi_v[nx-1][j] = newphi_v[nx-2][j];
+    }
+
+    for (int i=0; i<nx; ++i)
+    {
+      newphi_v[i][0]  = newphi_v[i][1];
+      newphi_v[i][ny-1] = newphi_v[i][ny-2];
+    }
+    std::cout << "CL fin" << std::endl;
+
+    // Fin CL
+
 
   }
   else
@@ -106,7 +134,27 @@ int main(int argc, char** argv)
     if (i%10 == 0) { std::cout << "Iteration -- " << i << std::endl;}
     if (scheme == "ExplicitScheme")
     {
-      newphi_v = chanVese->ExplicitScheme(phi_v,c.dt,c.mu,c.nu,c.l1,c.l2);
+      Correction = chanVese->Correction(phi_v);
+      C1= Correction.first;
+      C2= Correction.second;
+      newphi_v = chanVese->ExplicitScheme(phi_v,c.dt,c.mu,c.nu,c.l1,c.l2, C1, C2);
+
+      // CL
+      int nx(phi_v.size());
+    	int ny(phi_v[0].size());
+
+      for (int j=0; j<ny; ++j)
+      {
+        newphi_v[0][j]  = newphi_v[1][j];
+        newphi_v[nx-1][j] = newphi_v[nx-2][j];
+      }
+
+      for (int i=0; i<nx; ++i)
+      {
+        newphi_v[i][0]  = newphi_v[i][1];
+        newphi_v[i][ny-1] = newphi_v[i][ny-2];
+      }
+      // Fin CL
 
       diff = chanVese->fdiff(phi_v, newphi_v);
       // diff = (((newphi>=0).cast<double>()-0.5)*2. - ((phi>=0).cast<double>()-0.5)*2.).matrix().norm()
