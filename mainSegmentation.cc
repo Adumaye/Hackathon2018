@@ -1,8 +1,7 @@
 // created by Gabriel Balestre, Stéphanie Lyon, Nathan Paillou, Théo Robuschi
-//optimized by Baptiste Dufour, Antoine Dumaye, Marius Hérault, Odelin Gentieu et Louis Penin
+// optimized by Baptiste Dufour, Antoine Dumaye, Marius Hérault, Odelin Gentieu et Louis Penin
 // supervised by Annabelle Collin and Heloise Beaugendre
 // 2017/18
-
 
 #include <iostream>
 #include <fstream>
@@ -12,12 +11,9 @@
 #include "ChanVeseSchemes.h"
 #include "Util.h"
 #include "LevelSet_v.h"
-#include "defclasse.h"
-#include <openacc.h>
 #include "defclass.h"
 
 using namespace std;
-
 
 int main(int argc, char** argv)
 {
@@ -56,50 +52,64 @@ int main(int argc, char** argv)
   std::cout << "Construction ou lecture du masque redistancié" << std::endl;
   InitMask* initMask = new InitMask();
   int rows(image->GetImage().rows()), cols(image->GetImage().cols());
+
   std::vector< std::vector<double>> phi_v = initMask->BuildMaskAndRedistancing(rows, cols, imagemaskdistance);
 
-  // Chan Vese method
-  std::cout << "-------------------------------------------------" << std::endl;
-  std::cout << "Initialisation de la méthode de Chan Vese" << std::endl;
+  field u_0 = image->GetImage();
 
-  nx=phi_v.size();
-  ny=phi__v[0].size();
+// Creation des myvector
 
-  	myvector<double> V(nx*ny-1);
+  myvector<double> u0_myvector(rows*cols);
 
-  	for (int i=0; i<ny; i++)
-  	{
-  		for (int j=0; j<nx; j++)
-  		{
-  			V[i*nx+j]=_u0(i,j);
-  		}
-  	}
+  for (size_t i = 0; i < cols; i++)
+  {
+    for (size_t j = 0; j < rows; j++)
+    {
+      u0_myvector[i*rows+j]= u_0(i,j);
+    }
+  }
 
-  ChanVeseSchemes* chanVese=new ChanVeseSchemes(image,V);
+  int nx=phi_v.size();
+  int ny=phi_v[0].size();
 
-  saveVTKFile(phi_v, "Results/sol_0.vtk");
-  std::cout << "-------------------------------------------------" << std::endl;
+  myvector<double> phi_myvector(nx*ny);
 
-  std::cout << "Iteration -- 1" << std::endl;
+  for (int i=0; i<nx; i++)
+  {
+    for (int j=0; j<ny; j++)
+    {
+      phi_myvector[i*ny+j]= u_0(i,j);
+    }
+  }
 
   std::vector< std::vector <double> > newphi_v;
 
   newphi_v.resize(phi_v.size());
   for (int i=0;i<newphi_v.size() ;i++) { phi_v[i].resize(phi_v[0].size()); }
 
-  // définition du long vecteur
-  myvector<double> phi_myvector(newphi_v.size()*newphi_v[0].size());
+
+  // newphi_myvector
   myvector<double> newphi_myvector(newphi_v.size()*newphi_v[0].size()-1);
 
-  for (int i=0; i<ny; i++)
+  for (int i=0; i<nx; i++)
   {
-    for (int j=0; j<nx; j++)
+    for (int j=0; j<ny; j++)
     {
-      phi_myvector[i*nx+j]=phi_v[i][j];
+      phi_myvector[i*ny+j]=phi_v[i][j];
     }
   }
+// Fin de création de MyVector
 
-  //Fin définition du long vecteur
+  // Chan Vese method
+  std::cout << "-------------------------------------------------" << std::endl;
+  std::cout << "Initialisation de la méthode de Chan Vese" << std::endl;
+
+  ChanVeseSchemes* chanVese=new ChanVeseSchemes(image);
+
+  saveVTKFile(phi_v, "Results/sol_0.vtk");
+  std::cout << "-------------------------------------------------" << std::endl;
+
+  std::cout << "Iteration -- 1" << std::endl;
 
   std::string scheme(c.scheme);
 
@@ -116,14 +126,14 @@ int main(int argc, char** argv)
     Correction = chanVese->Correction(phi_v);
     C1= Correction.first;
     C2= Correction.second;
-    newphi_myvector = chanVese->ExplicitScheme_myvector(phi_myvector,c.dt,c.mu,c.nu,c.l1,c.l2, C1, C2);
+    newphi_myvector = chanVese->ExplicitScheme_myvector(phi_myvector,u0_myvector,c.dt,c.mu,c.nu,c.l1,c.l2, C1, C2, nx, ny);
     std::cout << "Fin myvector" << std::endl;
 
-    for (int i=0; i<ny; i++)
+    for (int i=0; i<nx; i++)
     {
-      for (int j=0; j<nx;j++)
+      for (int j=0; j<ny;j++)
       {
-        newphi_v[j][i]=newphi_myvector[i*nx+j]
+        newphi_v[i][j]=newphi_myvector[i*ny+j];
       }
     }
     // CL
@@ -180,7 +190,7 @@ int main(int argc, char** argv)
               newphi_v[nx-1][j] = newphi_v[nx-2][j];
             }
 
-            #pragma acc loop
+            // #pragma acc loop
             for (int i=0; i<nx; ++i)
             {
               newphi_v[i][0]  = newphi_v[i][1];

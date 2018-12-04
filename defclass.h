@@ -1,3 +1,4 @@
+#ifndef _defclass
 template<typename vtype>
 class myvector
 {
@@ -18,3 +19,5 @@ public:
     delete [] mydata;
   }
 };
+#define _defclass
+#endif
