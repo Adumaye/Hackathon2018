@@ -49,8 +49,6 @@ std::vector<std::vector<double>> InitMask::BuildMaskAndRedistancing(int rows, in
     double dist = (cols-num_cols*2.*radius)/(1.0+num_cols);
 
     // #pragma acc parallel loop reduction(+:M_v)
-    std:: cout << M_v.size() << " " << M_v[0].size()<< std::endl;
-
     for(int i=0; i<rows; i++)
     {
       for(int j=0; j<cols; j++)

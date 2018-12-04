@@ -3,7 +3,7 @@
 // supervised by Annabelle Collin and Heloise Beaugendre
 // 2017/18
 
-#ifndef _CHANVESESCHEMES_H
+#ifndef _CHANVESESCHEMES_H_Myvector
 
 #include "Dense"
 #include "Image.h"
@@ -106,50 +106,50 @@ public:
 	};
 
 
-	// //--------------DEBUT DES FONCTIONS MY_VECTOR-------------------------------------------------------------------------------
-	//
-	// inline double fdxplus_myvector(int pos,const myvector<double>& GrosPhi, double hx, int nx) const
-	// {
-	// 	return (GrosPhi[pos+nx]-GrosPhi[pos])/hx;
-	// };
-	//
-	// inline double fdxminus_myvector(int pos, const myvector<double>& GrosPhi, double hx, int nx) const
-	// {
-	// 	return (GrosPhi[pos-nx]-GrosPhi[pos])/hx;
-	// };
-	//
-	// inline double fdyplus_myvector(int pos,const myvector<double>& GrosPhi, double hy, int nx) const
-	// {
-	// 	return (GrosPhi[pos+1]-GrosPhi[pos])/hy;
-	// };
-	//
-	// inline double fdyminus_myvector(int pos,const myvector<double>& GrosPhi, double hy, int nx) const
-	// {
-	// 	return (GrosPhi[pos]-GrosPhi[pos-1])/hy;
-	// };
-	//
-	// inline double fdxcentral_myvector(int pos,const myvector<double>& GrosPhi, double hx, int nx) const
-	// {
-	// 	return (fdxplus_myvector(pos,GrosPhi, hx, nx)+fdxminus_myvector(pos,GrosPhi, hx, nx)) / 2.;
-	// };
-	//
-	// inline double fdycentral_myvector(int pos,const myvector<double>& GrosPhi,double hy, int nx) const
-	// {
-	// 	return (fdyplus_myvector(pos,GrosPhi, hy, nx)+fdyminus_myvector(pos, GrosPhi, hy, nx)) / 2.;
-	// };
-	//
-	// inline double coeffA_myvector(int pos,const myvector<double>& GrosPhi, double hx, double hy, const double eta, const double nx) const
-	// {
-	// 	return 1./(sqrt(pow(eta,2) + pow(fdxplus_myvector(pos, GrosPhi, hx, nx),2) + pow(fdycentral_myvector(pos, GrosPhi, hy, nx),2)));
-	// };
-	//
-	// inline double coeffB_myvector(int pos,const myvector<double>& GrosPhi, double hx, double hy, const double eta, const double nx) const
-	// {
-	// 	return 1./(sqrt(pow(eta,2) + pow(fdyplus_myvector(pos, GrosPhi, hy, nx),2) + pow(fdxcentral_myvector(pos, GrosPhi, hx, nx),2)));
-	// };
+	//--------------DEBUT DES FONCTIONS MY_VECTOR-------------------------------------------------------------------------------
+
+	inline double fdxplus_myvector(int pos,const myvector<double>& GrosPhi, double hx, int nx) const
+	{
+		return (GrosPhi[pos+nx]-GrosPhi[pos])/hx;
+	};
+
+	inline double fdxminus_myvector(int pos, const myvector<double>& GrosPhi, double hx, int nx) const
+	{
+		return (GrosPhi[pos-nx]-GrosPhi[pos])/hx;
+	};
+
+	inline double fdyplus_myvector(int pos,const myvector<double>& GrosPhi, double hy, int nx) const
+	{
+		return (GrosPhi[pos+1]-GrosPhi[pos])/hy;
+	};
+
+	inline double fdyminus_myvector(int pos,const myvector<double>& GrosPhi, double hy, int nx) const
+	{
+		return (GrosPhi[pos]-GrosPhi[pos-1])/hy;
+	};
+
+	inline double fdxcentral_myvector(int pos,const myvector<double>& GrosPhi, double hx, int nx) const
+	{
+		return (fdxplus_myvector(pos,GrosPhi, hx, nx)+fdxminus_myvector(pos,GrosPhi, hx, nx)) / 2.;
+	};
+
+	inline double fdycentral_myvector(int pos,const myvector<double>& GrosPhi,double hy, int nx) const
+	{
+		return (fdyplus_myvector(pos,GrosPhi, hy, nx)+fdyminus_myvector(pos, GrosPhi, hy, nx)) / 2.;
+	};
+
+	inline double coeffA_myvector(int pos,const myvector<double>& GrosPhi, double hx, double hy, const double eta, const double nx) const
+	{
+		return 1./(sqrt(pow(eta,2) + pow(fdxplus_myvector(pos, GrosPhi, hx, nx),2) + pow(fdycentral_myvector(pos, GrosPhi, hy, nx),2)));
+	};
+
+	inline double coeffB_myvector(int pos,const myvector<double>& GrosPhi, double hx, double hy, const double eta, const double nx) const
+	{
+		return 1./(sqrt(pow(eta,2) + pow(fdyplus_myvector(pos, GrosPhi, hy, nx),2) + pow(fdxcentral_myvector(pos, GrosPhi, hx, nx),2)));
+	};
 
 
 };
 
-#define _CHANVESESCHEMES_H
+#define _CHANVESESCHEMES_H_Myvector
 #endif
