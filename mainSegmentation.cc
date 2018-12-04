@@ -1,4 +1,5 @@
-// created by Gabriel Balestre, Stéphanie Lyon, Nathan Paillou, Théo Robushi
+// created by Gabriel Balestre, Stéphanie Lyon, Nathan Paillou, Théo Robuschi
+//optimized by Baptiste Dufour, Antoine Dumaye, Marius Hérault, Odelin Gentieu et Louis Penin
 // supervised by Annabelle Collin and Heloise Beaugendre
 // 2017/18
 
@@ -11,6 +12,9 @@
 #include "ChanVeseSchemes.h"
 #include "Util.h"
 #include "LevelSet_v.h"
+#include "defclasse.h"
+#include <openacc.h>
+#include "defclass.h"
 
 using namespace std;
 
@@ -57,7 +61,21 @@ int main(int argc, char** argv)
   // Chan Vese method
   std::cout << "-------------------------------------------------" << std::endl;
   std::cout << "Initialisation de la méthode de Chan Vese" << std::endl;
-  ChanVeseSchemes* chanVese=new ChanVeseSchemes(image);
+
+  nx=phi_v.size();
+  ny=phi__v[0].size();
+
+  	myvector<double> V(nx*ny-1);
+
+  	for (int i=0; i<ny; i++)
+  	{
+  		for (int j=0; j<nx; j++)
+  		{
+  			V[i*nx+j]=_u0(i,j);
+  		}
+  	}
+
+  ChanVeseSchemes* chanVese=new ChanVeseSchemes(image,V);
 
   saveVTKFile(phi_v, "Results/sol_0.vtk");
   std::cout << "-------------------------------------------------" << std::endl;
@@ -69,13 +87,27 @@ int main(int argc, char** argv)
   newphi_v.resize(phi_v.size());
   for (int i=0;i<newphi_v.size() ;i++) { phi_v[i].resize(phi_v[0].size()); }
 
+  // définition du long vecteur
+  myvector<double> phi_myvector(newphi_v.size()*newphi_v[0].size());
+  myvector<double> newphi_myvector(newphi_v.size()*newphi_v[0].size()-1);
+
+  for (int i=0; i<ny; i++)
+  {
+    for (int j=0; j<nx; j++)
+    {
+      phi_myvector[i*nx+j]=phi_v[i][j];
+    }
+  }
+
+  //Fin définition du long vecteur
+
   std::string scheme(c.scheme);
 
   double C1(0.);
   double C2(0.);
   std::pair<double,double> Correction;
 
-//Début du Temps
+  //Début du Temps
   auto start = chrono::high_resolution_clock::now();
 
   if (scheme == "ExplicitScheme")
@@ -84,11 +116,19 @@ int main(int argc, char** argv)
     Correction = chanVese->Correction(phi_v);
     C1= Correction.first;
     C2= Correction.second;
-    newphi_v = chanVese->ExplicitScheme(phi_v,c.dt,c.mu,c.nu,c.l1,c.l2, C1, C2);
+    newphi_myvector = chanVese->ExplicitScheme_myvector(phi_myvector,c.dt,c.mu,c.nu,c.l1,c.l2, C1, C2);
+    std::cout << "Fin myvector" << std::endl;
 
+    for (int i=0; i<ny; i++)
+    {
+      for (int j=0; j<nx;j++)
+      {
+        newphi_v[j][i]=newphi_myvector[i*nx+j]
+      }
+    }
     // CL
     int nx(phi_v.size());
-  	int ny(phi_v[0].size());
+    int ny(phi_v[0].size());
 
     for (int j=0; j<ny; ++j)
     {
@@ -101,6 +141,8 @@ int main(int argc, char** argv)
       newphi_v[i][0]  = newphi_v[i][1];
       newphi_v[i][ny-1] = newphi_v[i][ny-2];
     }
+    std::cout << "Fin CL" << std::endl;
+
     // Fin CL
   }
   else
@@ -111,55 +153,68 @@ int main(int argc, char** argv)
 
   phi_v = newphi_v;
   int i(2);
-  while ( (diff > 5e-6) && (i < 100) )
+  // #pragma acc data copy(phi_v) create(newphi_v)
   {
-    if (i%10 == 0) { std::cout << "Iteration -- " << i << std::endl;}
-    if (scheme == "ExplicitScheme")
+    while ( (diff > 5e-6) && (i < 100) )
     {
-      Correction = chanVese->Correction(phi_v);
-      C1= Correction.first;
-      C2= Correction.second;
-      newphi_v = chanVese->ExplicitScheme(phi_v,c.dt,c.mu,c.nu,c.l1,c.l2, C1, C2);
-
-      // CL
-      int nx(phi_v.size());
-    	int ny(phi_v[0].size());
-
-      for (int j=0; j<ny; ++j)
+      if (i%10 == 0) { std::cout << "Iteration -- " << i << std::endl;}
+      if (scheme == "ExplicitScheme")
       {
-        newphi_v[0][j]  = newphi_v[1][j];
-        newphi_v[nx-1][j] = newphi_v[nx-2][j];
-      }
+        Correction = chanVese->Correction(phi_v);
+        C1= Correction.first;
+        C2= Correction.second;
+        newphi_v = chanVese->ExplicitScheme(phi_v,c.dt,c.mu,c.nu,c.l1,c.l2, C1, C2);
 
-      for (int i=0; i<nx; ++i)
-      {
-        newphi_v[i][0]  = newphi_v[i][1];
-        newphi_v[i][ny-1] = newphi_v[i][ny-2];
-      }
-      // Fin CL
+        // CL
+        int nx(phi_v.size());
+        int ny(phi_v[0].size());
 
-      diff = chanVese->fdiff(phi_v, newphi_v);
+        // #pragma acc data copy(newphi_v)
+        // {
+        //   #pragma acc parallel
+        //   {
+        //     #pragma acc loop
+            for (int j=0; j<ny; ++j)
+            {
+              newphi_v[0][j]  = newphi_v[1][j];
+              newphi_v[nx-1][j] = newphi_v[nx-2][j];
+            }
 
-      if (i%10 == 0)
-      {
-        for (int i=0 ; i < newphi_v.size(); i++)
+            #pragma acc loop
+            for (int i=0; i<nx; ++i)
+            {
+              newphi_v[i][0]  = newphi_v[i][1];
+              newphi_v[i][ny-1] = newphi_v[i][ny-2];
+            }
+        //   }
+        //   #pragma acc update self(newphi_v)
+        // }
+
+        // Fin CL
+
+        diff = chanVese->fdiff(phi_v, newphi_v);
+
+        if (i%10 == 0)
         {
-          for (int j=0 ; j < newphi_v[0].size(); j++)
+          for (int i=0 ; i < newphi_v.size(); i++)
           {
-            newphi_v[i][j]=newphi_v[i][j]/abs(newphi_v[i][j]);
+            for (int j=0 ; j < newphi_v[0].size(); j++)
+            {
+              newphi_v[i][j]=newphi_v[i][j]/abs(newphi_v[i][j]);
+            }
           }
+          LevelSet_v lv_v(newphi_v);
+          cout << "Redistanciation... " << endl;
+          lv_v.redistancing_v(10);
+          saveVTKFile(newphi_v, ("Results/sol_" + to_string(i)+ ".vtk").c_str());
+          std::cout << "Evolution of phi : " << diff << std::endl;
         }
-        LevelSet_v lv_v(newphi_v);
-        cout << "Redistanciation... " << endl;
-        lv_v.redistancing_v(10);
-        saveVTKFile(newphi_v, ("Results/sol_" + to_string(i)+ ".vtk").c_str());
-        std::cout << "Evolution of phi : " << diff << std::endl;
+        // #pragma acc update device(newphi_v)
+        phi_v = newphi_v;
+        i++;
       }
-      phi_v = newphi_v;
-      i++;
     }
   }
-
   field newphi(phi_v.size(),phi_v[0].size());
   for (int i=0 ; i < newphi_v.size(); i++)
   {
