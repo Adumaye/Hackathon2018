@@ -1,8 +1,8 @@
 # Compilateur Utilisé
-CC = pgc++
+CC = mpic++
 
 # Options en mode optimisé - La variable DEBUG est définie comme fausse
-OPTIM_FLAG = -O3 -DNDEBUG -w -I Eigen/Eigen -std=c++11 -acc -Minfo=accel
+OPTIM_FLAG = -O3 -DNDEBUG -w -I Eigen/Eigen -std=c++11
 
 # Options en mode debug - La variable DEBUG est définie comme vraie
 DEBUG_FLAG = -g -DDEBUG  -I Eigen/Eigen -ltiff -lm -lpthread -std=c++11 -w

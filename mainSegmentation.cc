@@ -61,11 +61,11 @@ int main(int argc, char** argv)
 
   myvector<double> u0_myvector(rows*cols);
 
-  for (size_t i = 0; i < cols; i++)
+  for (size_t i = 0; i < rows; i++)
   {
-    for (size_t j = 0; j < rows; j++)
+    for (size_t j = 0; j < cols; j++)
     {
-      u0_myvector[i*rows+j]= u_0(i,j);
+      u0_myvector[i*cols+j]= u_0(i,j);
     }
   }
 
@@ -85,11 +85,11 @@ int main(int argc, char** argv)
   std::vector< std::vector <double> > newphi_v;
 
   newphi_v.resize(phi_v.size());
-  for (int i=0;i<newphi_v.size() ;i++) { phi_v[i].resize(phi_v[0].size()); }
+  for (int i=0;i<newphi_v.size() ;i++) { newphi_v[i].resize(phi_v[0].size()); }
 
 
   // newphi_myvector
-  myvector<double> newphi_myvector(newphi_v.size()*newphi_v[0].size()-1);
+  myvector<double> newphi_myvector(nx*ny);
 
   for (int i=0; i<nx; i++)
   {
@@ -128,6 +128,9 @@ int main(int argc, char** argv)
     C2= Correction.second;
     newphi_myvector = chanVese->ExplicitScheme_myvector(phi_myvector,u0_myvector,c.dt,c.mu,c.nu,c.l1,c.l2, C1, C2, nx, ny);
     std::cout << "Fin myvector" << std::endl;
+
+    std::cout << "taille de newphi_v" << newphi_v.size() << "et" << newphi_v[0].size() << std::endl;
+    std::cout << "taille de newphi_myvector" << newphi_myvector.size() << std::endl;
 
     for (int i=0; i<nx; i++)
     {
@@ -243,6 +246,17 @@ int main(int argc, char** argv)
   auto finish = chrono::high_resolution_clock::now();
   double t = chrono::duration_cast<chrono::microseconds>(finish-start).count();
   cout << "Le prog a mis " << t*0.000001 << " secondes a s'effectuer" << endl;
+
+
+  std::cout<<" 0 "<< std::endl;
+  u0_myvector.~myvector();
+  std::cout<<" 1"<< std::endl;
+
+  phi_myvector.~myvector();
+  std::cout<<" 2 "<< std::endl;
+
+  newphi_myvector.~myvector();
+  std::cout<<" 3 "<< std::endl;
 
 
   return 0;
