@@ -198,8 +198,8 @@ myvector<double> ChanVeseSchemes::ExplicitScheme_myvector(const myvector<double>
 		// #pragma acc loop
 		for (int j=1; j<ny-1; ++j)
 		{
-			double firstterm   = (fdxplus_myvector(i*ny+j,phi_v,hx,nx)*coeffA_myvector(i*ny+j,phi_v,hx,hy,eta,nx) - fdxminus_myvector(i*ny+j,phi_v,hx,nx)*coeffA_myvector((i-1)*ny+j,phi_v,hx,hy,eta,nx));
-			double secondterm  = (fdyplus_myvector(i*ny+j,phi_v,hy,nx)*coeffB_myvector(i*ny+j,phi_v,hx,hy,eta,nx) - fdyminus_myvector(i*ny+j,phi_v,hy,nx)*coeffB_myvector(i*ny+(j-1),phi_v,hx,hy,eta,nx));
+			double firstterm   = (fdxplus_myvector(i*ny+j,phi_v,hx,ny)*coeffA_myvector(i*ny+j,phi_v,hx,hy,eta,ny) - fdxminus_myvector(i*ny+j,phi_v,hx,ny)*coeffA_myvector((i-1)*ny+j,phi_v,hx,hy,eta,ny));
+			double secondterm  = (fdyplus_myvector(i*ny+j,phi_v,hy)*coeffB_myvector(i*ny+j,phi_v,hx,hy,eta,ny) - fdyminus_myvector(i*ny+j,phi_v,hy)*coeffB_myvector(i*ny+(j-1),phi_v,hx,hy,eta,ny));
 			double correc      = -l1*(u0_myvector[i*ny+j]-C1)*(u0_myvector[i*ny+j]-C1) + l2*(u0_myvector[i*ny+j]-C2)*(u0_myvector[i*ny+j]-C2);
 			double diracij            = eps/(pow(phi_v[i*ny+j],2)+pow(eps,2));
 			phiint_v[i*ny+j] = phi_v[i*ny+j] + dt*diracij*(mu*(firstterm+secondterm)- nu + correc);

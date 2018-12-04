@@ -106,44 +106,44 @@ public:
 
 	// //--------------DEBUT DES FONCTIONS MY_VECTOR-------------------------------------------------------------------------------
 
-	inline double fdxplus_myvector(int pos,const myvector<double>& GrosPhi, double hx, int nx) const
+	inline double fdxplus_myvector(int pos,const myvector<double>& GrosPhi, double hx, int ny) const
 	{
-		return (GrosPhi[pos+nx]-GrosPhi[pos])/hx;
+		return (GrosPhi[pos+ny]-GrosPhi[pos])/hx;
 	};
 
-	inline double fdxminus_myvector(int pos, const myvector<double>& GrosPhi, double hx, int nx) const
+	inline double fdxminus_myvector(int pos, const myvector<double>& GrosPhi, double hx, int ny) const
 	{
-		return (GrosPhi[pos-nx]-GrosPhi[pos])/hx;
+		return (GrosPhi[pos]-GrosPhi[pos-ny])/hx;
 	};
 
-	inline double fdyplus_myvector(int pos,const myvector<double>& GrosPhi, double hy, int nx) const
+	inline double fdyplus_myvector(int pos,const myvector<double>& GrosPhi, double hy) const
 	{
 		return (GrosPhi[pos+1]-GrosPhi[pos])/hy;
 	};
 
-	inline double fdyminus_myvector(int pos,const myvector<double>& GrosPhi, double hy, int nx) const
+	inline double fdyminus_myvector(int pos,const myvector<double>& GrosPhi, double hy) const
 	{
 		return (GrosPhi[pos]-GrosPhi[pos-1])/hy;
 	};
 
-	inline double fdxcentral_myvector(int pos,const myvector<double>& GrosPhi, double hx, int nx) const
+	inline double fdxcentral_myvector(int pos,const myvector<double>& GrosPhi, double hx, int ny) const
 	{
-		return (fdxplus_myvector(pos,GrosPhi, hx, nx)+fdxminus_myvector(pos,GrosPhi, hx, nx)) / 2.;
+		return (fdxplus_myvector(pos,GrosPhi, hx, ny)+fdxminus_myvector(pos,GrosPhi, hx, ny)) / 2.;
 	};
 
-	inline double fdycentral_myvector(int pos,const myvector<double>& GrosPhi,double hy, int nx) const
+	inline double fdycentral_myvector(int pos,const myvector<double>& GrosPhi,double hy) const
 	{
-		return (fdyplus_myvector(pos,GrosPhi, hy, nx)+fdyminus_myvector(pos, GrosPhi, hy, nx)) / 2.;
+		return (fdyplus_myvector(pos,GrosPhi, hy)+fdyminus_myvector(pos, GrosPhi, hy)) / 2.;
 	};
 
-	inline double coeffA_myvector(int pos,const myvector<double>& GrosPhi, double hx, double hy, const double eta, const double nx) const
+	inline double coeffA_myvector(int pos,const myvector<double>& GrosPhi, double hx, double hy, const double eta, const double ny) const
 	{
-		return 1./(sqrt(pow(eta,2) + pow(fdxplus_myvector(pos, GrosPhi, hx, nx),2) + pow(fdycentral_myvector(pos, GrosPhi, hy, nx),2)));
+		return 1./(sqrt(pow(eta,2) + pow(fdxplus_myvector(pos, GrosPhi, hx, ny),2) + pow(fdycentral_myvector(pos, GrosPhi, hy),2)));
 	};
 
-	inline double coeffB_myvector(int pos,const myvector<double>& GrosPhi, double hx, double hy, const double eta, const double nx) const
+	inline double coeffB_myvector(int pos,const myvector<double>& GrosPhi, double hx, double hy, const double eta, const double ny) const
 	{
-		return 1./(sqrt(pow(eta,2) + pow(fdyplus_myvector(pos, GrosPhi, hy, nx),2) + pow(fdxcentral_myvector(pos, GrosPhi, hx, nx),2)));
+		return 1./(sqrt(pow(eta,2) + pow(fdyplus_myvector(pos, GrosPhi, hy, ny),2) + pow(fdxcentral_myvector(pos, GrosPhi, hx),2)));
 	};
 
 
