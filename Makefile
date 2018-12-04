@@ -14,7 +14,7 @@ LIB = -ltiff -lm -lpthread
 CXX_FLAGS = $(OPTIM_FLAG)
 
 #Plafrim
-PLAFRIM_FLAG = -O3 -DNDEBUG -w -I eigen/Eigen -DEIGEN_DONT_VECTORIZE -std=c++11 -acc -ta=tesla:managed -Minfo=accel -Mneginfo
+PLAFRIM_FLAG = -O3 -DNDEBUG -w -I ../eigen/Eigen -DEIGEN_DONT_VECTORIZE -std=c++11 -acc -ta=tesla:managed -Minfo=accel -Mneginfo
 
 # Le nom de l'exécutable
 PROGFilter = mainFilter
