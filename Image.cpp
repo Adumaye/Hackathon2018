@@ -10,7 +10,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
-#include "mpi.h"
 #include <tiffio.h>
 
 #include "Image.h"
@@ -136,7 +135,7 @@ void Image::BuildFilter(field phi, std::string filename, std::string output_file
     {
       test = true;
     }
-    MPI_Barrier(MPI_COMM_WORLD);
+  
   }
 }
 
@@ -177,7 +176,7 @@ void Image::CreateFull(field phi, std::string filename, std::string output_file,
       }
     }
   }
-  MPI_Barrier(MPI_COMM_WORLD);
+  
 
 
   while (test == false)
@@ -228,7 +227,7 @@ void Image::CreateFull(field phi, std::string filename, std::string output_file,
     {
       test = true;
     }
-    MPI_Barrier(MPI_COMM_WORLD);
+   
   }
 }
 
@@ -267,7 +266,7 @@ void Image::LocalLoading(field& M, int i0, int i1, string filename)
 
 void Image::ApplyMedianFilter(const int windows_size,const double seuil, string filename, int me, int np)
 {
-  MPI_Status Status2;
+  
   bool test;
   test =false;
 

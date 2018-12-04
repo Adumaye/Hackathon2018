@@ -6,8 +6,10 @@
 
 #include "Dense"
 #include "Image.h"
-#include "Util.h"
-#include "LevelSet.h"
+// #include "Util.h"
+#include <vector>
+
+using namespace std;
 
 typedef Eigen::Array<double, Eigen::Dynamic, Eigen::Dynamic> field;
 

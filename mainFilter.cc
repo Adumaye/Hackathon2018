@@ -23,7 +23,7 @@ int main(int argc, char** argv)
 	config_t c;
 	parseFile(argv[1],c);
 
-	int me=0, np=1;
+	int me=0, np=0;
 
 	Image* image=new Image(); //Pointeur vers l'image
 

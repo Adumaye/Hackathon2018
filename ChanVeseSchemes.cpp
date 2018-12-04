@@ -9,11 +9,11 @@
 #include "float.h"
 #include <iostream>
 #include <fstream>
-#include <cmath>
-#include <stdio.h>
-#include <stdlib.h>
+// #include <cmath>
+// #include <mpi.h>
+// #include <stdio.h>
+// #include <stdlib.h>
 
-using namespace std;
 
 ChanVeseSchemes::ChanVeseSchemes (Image* image) : _u0(image->GetImage())
 {
@@ -149,34 +149,38 @@ std::pair<double,double> ChanVeseSchemes::Correction(const std::vector<std::vect
 	return Correction;
 }
 
-
 std::vector<std::vector<double>>  ChanVeseSchemes::ExplicitScheme(const std::vector<std::vector<double>>&phi_v, const double dt,  const double mu, const double nu, const double l1, const double l2, const double C1, const double C2) const
 {
-	const double hx(1.), hy(1.0);
-	const double eta(1e-8);
+  const double hx(1.), hy(1.0);
+  const double eta(1e-8);
 
-	int nx(phi_v.size());
-	int ny(phi_v[0].size());
+  int nx(phi_v.size());
+  int ny(phi_v[0].size());
 
-	std::vector< std::vector<double>> phiint_v;
-	phiint_v.resize(nx);
-	for (int i=0;i< nx;i++) { phiint_v[i].resize(ny); }
+  std::vector< std::vector<double>> phiint_v;
+  phiint_v.resize(nx);
+  for (int i=0;i< nx;i++) { phiint_v[i].resize(ny); }
 
-	double eps(3.);
-	double diracij;
-	for (int i=1; i<nx-1; ++i)
-	{
-		for (int j=1; j<ny-1; ++j)
-		{
-			double firstterm   = (fdxplus(i,j,phi_v,hx)*coeffA(i,j,phi_v,hx,hy,eta) - fdxminus(i,j,phi_v,hx)*coeffA(i-1,j,phi_v,hx,hy,eta));
-			double secondterm  = (fdyplus(i,j,phi_v,hy)*coeffB(i,j,phi_v,hx,hy,eta) - fdyminus(i,j,phi_v,hy)*coeffB(i,j-1,phi_v,hx,hy,eta));
-			double correc      = -l1*(_u0(i,j)-C1)*(_u0(i,j)-C1) + l2*(_u0(i,j)-C2)*(_u0(i,j)-C2);
-			diracij            = eps/(pow(phi_v[i][j],2)+pow(eps,2));
-			phiint_v[i][j] = phi_v[i][j] + dt*diracij*(mu*(firstterm+secondterm)- nu + correc);
-		}
-	}
+  double eps(3.);
+  double diracij;
+  //#pragma acc parallel
+  {
+    //#pragma acc loop independent
+    for (int i=1; i<nx-1; ++i)
+      {
+	//#pragma acc loop independant
+	for (int j=1; j<ny-1; ++j)
+	  {
+	    double firstterm   = (fdxplus(i,j,phi_v,hx)*coeffA(i,j,phi_v,hx,hy,eta) - fdxminus(i,j,phi_v,hx)*coeffA(i-1,j,phi_v,hx,hy,eta));
+	    double secondterm  = (fdyplus(i,j,phi_v,hy)*coeffB(i,j,phi_v,hx,hy,eta) - fdyminus(i,j,phi_v,hy)*coeffB(i,j-1,phi_v,hx,hy,eta));
+	    double correc      = -l1*(_u0(i,j)-C1)*(_u0(i,j)-C1) + l2*(_u0(i,j)-C2)*(_u0(i,j)-C2);
+	    diracij            = eps/(pow(phi_v[i][j],2)+pow(eps,2));
+	    phiint_v[i][j] = phi_v[i][j] + dt*diracij*(mu*(firstterm+secondterm)- nu + correc);
+	  }
+      }
+  }
 
-	return phiint_v;
+  return phiint_v;
 }
 
 

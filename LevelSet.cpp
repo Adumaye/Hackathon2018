@@ -3,10 +3,6 @@
 
 #include "LevelSet.h"
 
-/*
- * redistancing max_iter times
- *
- */
 void LevelSet::redistancing(const int max_iter)
 {
     field phi0 = _phi;
@@ -42,25 +38,6 @@ void LevelSet::redistancing(const int max_iter)
 }
 
 /*
- * redistancing until equilibrium
- *
- */
-void LevelSet::redistancing(const double eps)
-{
-    field phi0 = _phi;
-    field phin = _phi;
-
-    int iter = 0; double err = 2*eps;
-    while (err>eps)
-    {
-        firstOrderUpwind(_phi, phi0, .5*1);
-        err = 2*(phin-_phi).abs().maxCoeff()/1;
-        phin = _phi;
-        iter++;
-    }
-}
-
-/*
  * first order upwind
  *
  */
@@ -74,6 +51,8 @@ void LevelSet::firstOrderUpwind(field& phi, const field& phi0, const double dt)
     field G = godunov(dxm, dxp, dym, dyp);
 
     field phi1 = phi;
+
+
     for (int  i=0; i<phi.rows(); ++i)
         for (int  j=0; j<phi.cols(); ++j)
         {

@@ -2,151 +2,152 @@
 #define LEVELSET_CPP_v
 
 #include "LevelSet_v.h"
+#include <cmath>
 #include <iostream>
 
 /*
- * redistancing max_iter times
- *
- */
+* redistancing max_iter times
+*
+*/
 
 void LevelSet_v::redistancing_v(const int max_iter)
 {
   std::vector<std::vector<double>> phi0_v = _phi_v;
   std::vector<std::vector<double>> phin_v = _phi_v;
 
-    int iter = 0, pourcentage =0;
+  int iter = 0, pourcentage =0;
 
-    while (iter<max_iter)
-      {
-        firstOrderUpwind_v(_phi_v, phi0_v, .5*1);
-        phin_v = _phi_v;
+  while (iter<max_iter)
+  {
+    firstOrderUpwind_v(_phi_v, phi0_v, .5*1);
+    phin_v = _phi_v;
 
-      	if ((floor(iter*100/max_iter)>=pourcentage)&&(max_iter>20))
-      	  {
-      	    pourcentage=pourcentage+1;
-
-      	    int i_barre;
-      	    printf( "[" );
-      	    for (i_barre = 0 ; i_barre <= pourcentage ; i_barre += 2) printf( "*" );
-      	    for (; i_barre <= 100 ; i_barre += 2 ) printf( "-" );
-      	    printf( "] %3d %%", pourcentage );
-
-      	    for(i_barre=0;i_barre<59;++i_barre) printf( "%c", 8 );
-
-      	    fflush(stdout );
-
-      	  }
-
-        iter++;
-      }
-
-    if (max_iter > 20) {std::cout << std::endl;}
-}
-
-/*
- * first order upwind_v
- *
- */
-void LevelSet_v::firstOrderUpwind_v(std::vector<std::vector<double>>& phi_v, const std::vector<std::vector<double>>& phi0_v, const double dt)
-{
-    std::vector<std::vector<double>> dxm = diff_m_v(phi_v, 0),
-                                     dxp = diff_p_v(phi_v, 0),
-                                     dym = diff_m_v(phi_v, 1),
-                                     dyp = diff_p_v(phi_v, 1);
-
-    std::vector<std::vector<double>> G = godunov_v(dxm, dxp, dym, dyp);
-    std::vector<std::vector<double>> phi1_v = phi_v;
-
-    for (int  i=0; i<phi_v.size(); ++i)
-        for (int  j=0; j<phi_v[0].size(); ++j)
-        {
-            int mini(i+1); if (phi_v.size()-1 < mini) {mini = phi_v.size()-1;}
-            int minj(j+1); if (phi_v[0].size()-1 < minj) {minj = phi_v[0].size()-1;}
-
-            double  pij = phi0_v[i][j],
-                    pimj = phi0_v[std::max(i-1,0)][j], pipj = phi0_v[mini][j],
-                    pijm = phi0_v[i][std::max(j-1,0)], pijp = phi0_v[i][minj];
-            double delta = boundary(pij, pimj, pipj, pijm, pijp);
-            double Dij = .5*sgn(pij)*1; // Only for masks !
-
-            phi1_v[i][j] = phi_v[i][j]-dt*delta*sgn(phi0_v[i][j])*G[i][j];
-            phi1_v[i][j]-= dt*(1-delta)*( sgn(phi0_v[i][j])*fabs(phi_v[i][j])-Dij )/1;
-        }
-    phi_v = phi1_v;
-}
-
-
-/*
- * Godunov()_v :
- *
- */
-std::vector<std::vector<double>> LevelSet_v::godunov_v(const std::vector<std::vector<double>>& xm, const std::vector<std::vector<double>>& xp, const std::vector<std::vector<double>>& ym, const std::vector<std::vector<double>>& yp) const
-{
-    std::vector<std::vector<double>> result;
-    result.resize(_phi_v.size());
-    for (int i=0; i<_phi_v.size() ;i++) { result[i].resize(_phi_v[0].size()); }
-
-    double coef1( sqrt( pow(std::max( std::min(0.,-fmax(xp)), std::max(0., fmax(xm))), 2) + pow(std::max( std::min( 0., -fmin(yp)), std::max(0., fmax(ym))), 2)) );
-    double coef2( sqrt( pow(std::max( std::min(0.,-fmax(xm)), std::max(0., fmax(xp))), 2) + pow(std::max( std::min( 0., -fmax(ym)), std::max(0., fmax(yp))), 2)) );
-
-    for (int i; i<result.size(); i++)
+    if ((floor(iter*100/max_iter)>=pourcentage)&&(max_iter>20))
     {
-      for (int j; j<result[0].size(); j++)
-      {
-        result[i][j] = (pos_v(_phi_v,i,j) * coef1 + neg_v(_phi_v,i,j)*coef2) -1.;
+      pourcentage=pourcentage+1;
 
-      }
+      int i_barre;
+      printf( "[" );
+      for (i_barre = 0 ; i_barre <= pourcentage ; i_barre += 2) printf( "*" );
+      for (; i_barre <= 100 ; i_barre += 2 ) printf( "-" );
+      printf( "] %3d %%", pourcentage );
+
+      for(i_barre=0;i_barre<59;++i_barre) printf( "%c", 8 );
+
+      fflush(stdout );
+
     }
 
-    return result ; //- 1;
+    iter++;
+  }
+
+  if (max_iter > 20) {std::cout << std::endl;}
+}
+
+/*
+* first order upwind_v
+*
+*/
+void LevelSet_v::firstOrderUpwind_v(std::vector<std::vector<double>>& phi_v, const std::vector<std::vector<double>>& phi0_v, const double dt)
+{
+  std::vector<std::vector<double>> dxm = diff_m_v(phi_v, 0),
+  dxp = diff_p_v(phi_v, 0),
+  dym = diff_m_v(phi_v, 1),
+  dyp = diff_p_v(phi_v, 1);
+
+  std::vector<std::vector<double>> G = godunov_v(dxm, dxp, dym, dyp);
+  std::vector<std::vector<double>> phi1_v = phi_v;
+
+  for (int  i=0; i<phi_v.size(); ++i)
+  for (int  j=0; j<phi_v[0].size(); ++j)
+  {
+    int mini(i+1); if (phi_v.size()-1 < mini) {mini = phi_v.size()-1;}
+    int minj(j+1); if (phi_v[0].size()-1 < minj) {minj = phi_v[0].size()-1;}
+
+    double  pij = phi0_v[i][j],
+    pimj = phi0_v[std::max(i-1,0)][j], pipj = phi0_v[mini][j],
+    pijm = phi0_v[i][std::max(j-1,0)], pijp = phi0_v[i][minj];
+    double delta = boundary(pij, pimj, pipj, pijm, pijp);
+    double Dij = .5*sgn(pij)*1; // Only for masks !
+
+    phi1_v[i][j] = phi_v[i][j]-dt*delta*sgn(phi0_v[i][j])*G[i][j];
+    phi1_v[i][j]-= dt*(1-delta)*( sgn(phi0_v[i][j])*fabs(phi_v[i][j])-Dij )/1;
+  }
+  phi_v = phi1_v;
 }
 
 
 /*
- * sgn(double X):
- *      return X/(|X|+eps)
- */
+* Godunov()_v :
+*
+*/
+std::vector<std::vector<double>> LevelSet_v::godunov_v(const std::vector<std::vector<double>>& xm, const std::vector<std::vector<double>>& xp, const std::vector<std::vector<double>>& ym, const std::vector<std::vector<double>>& yp) const
+{
+  std::vector<std::vector<double>> result;
+  result.resize(_phi_v.size());
+  for (int i=0; i<_phi_v.size() ;i++) { result[i].resize(_phi_v[0].size()); }
+
+  double coef1( sqrt( pow(std::max( std::min(0.,-fmax(xp)), std::max(0., fmax(xm))), 2) + pow(std::max( std::min( 0., -fmin(yp)), std::max(0., fmax(ym))), 2)) );
+  double coef2( sqrt( pow(std::max( std::min(0.,-fmax(xm)), std::max(0., fmax(xp))), 2) + pow(std::max( std::min( 0., -fmax(ym)), std::max(0., fmax(yp))), 2)) );
+
+  for (int i; i<result.size(); i++)
+  {
+    for (int j; j<result[0].size(); j++)
+    {
+      result[i][j] = (pos_v(_phi_v,i,j) * coef1 + neg_v(_phi_v,i,j)*coef2) -1.;
+
+    }
+  }
+
+  return result ; //- 1;
+}
+
+
+/*
+* sgn(double X):
+*      return X/(|X|+eps)
+*/
 double LevelSet_v::sgn(double x) const
 {
-    return x/(fabs(x)+1*1e-15);
+  return x/(fabs(x)+1*1e-15);
 }
 
 
 double LevelSet_v::boundary(const double ij, const double imj,  const double ipj, const double ijm, const double ijp) const
 {
-    double eps = 1*1e-15;
+  double eps = 1*1e-15;
 
-    double a = ( 1+std::min(ij*imj,0.0)/(fabs(ij*imj)+eps) )*( 1+std::min(ij*ipj,0.0)/(fabs(ij*ipj)+eps) );
-    double b = ( 1+std::min(ij*ijm,0.0)/(fabs(ij*ijm)+eps) )*( 1+std::min(ij*ijp,0.0)/(fabs(ij*ijp)+eps) );
+  double a = ( 1+std::min(ij*imj,0.0)/(fabs(ij*imj)+eps) )*( 1+std::min(ij*ipj,0.0)/(fabs(ij*ipj)+eps) );
+  double b = ( 1+std::min(ij*ijm,0.0)/(fabs(ij*ijm)+eps) )*( 1+std::min(ij*ijp,0.0)/(fabs(ij*ijp)+eps) );
 
-    return a*b;
+  return a*b;
 }
 
 /*
- * pos(X)_v :
- *      return max(X,0)/(|X|+eps)
- */
+* pos(X)_v :
+*      return max(X,0)/(|X|+eps)
+*/
 double LevelSet_v::pos_v(const std::vector<std::vector<double>>& X, int a, int b) const
 {
-    double max=std::max(fmax(X),0.);
-    std::vector<std::vector<double>> newX;
-    newX.resize(X.size());
-    for (int i=0;i<newX.size() ;i++) { newX[i].resize(X[0].size()); }
+  double max=std::max(fmax(X),0.);
+  std::vector<std::vector<double>> newX;
+  newX.resize(X.size());
+  for (int i=0;i<newX.size() ;i++) { newX[i].resize(X[0].size()); }
 
-    for (int i; i<newX.size(); i++)
+  for (int i; i<newX.size(); i++)
+  {
+    for (int j; j<newX[0].size(); j++)
     {
-      for (int j; j<newX[0].size(); j++)
-      {
-        newX[i][j]= max/(abs(X[i][j])+1e-15);
-      }
+      newX[i][j]= max/(abs(X[i][j])+1e-15);
     }
-    return newX[a][b];
+  }
+  return newX[a][b];
 }
 
 /*
- * neg(X)_v :
- *      return -min(X,0)/(|X|+eps)
- */
+* neg(X)_v :
+*      return -min(X,0)/(|X|+eps)
+*/
 double LevelSet_v::neg_v(const std::vector<std::vector<double>>& X, int a, int b) const
 {
   double min=std::min(fmin(X),0.);
@@ -233,82 +234,82 @@ std::vector<std::vector<double>> LevelSet_v::diff_v(const std::vector<std::vecto
 }
 
 /*
- * diff_m_v:
- *      dérivé à gauche (m <-> moins)
- *
- */
+* diff_m_v:
+*      dérivé à gauche (m <-> moins)
+*
+*/
 std::vector<std::vector<double>> LevelSet_v::diff_m_v(const std::vector<std::vector<double>>& F, int index) const
 {
-    std::vector<std::vector<double>> diff_v = F;
-    for (int i=0; i<diff_v.size(); i++)
+  std::vector<std::vector<double>> diff_v = F;
+  for (int i=0; i<diff_v.size(); i++)
+  {
+    for(int j=0; j<diff_v[0].size(); j++ )
     {
-      for(int j=0; j<diff_v[0].size(); j++ )
-      {
-        diff_v[i][j] = 0.;
-      }
+      diff_v[i][j] = 0.;
     }
-    for (int  i=0; i<F.size(); ++i)
-        for (int  j=0; j<F[0].size(); ++j)
-            diff_v[i][j] = diff_m_v(F, index, i, j);
-    return diff_v;
+  }
+  for (int  i=0; i<F.size(); ++i)
+  for (int  j=0; j<F[0].size(); ++j)
+  diff_v[i][j] = diff_m_v(F, index, i, j);
+  return diff_v;
 }
 
 double LevelSet_v::diff_m_v(const std::vector<std::vector<double>>& F, int index, int x, int y) const {
-    if(index==0) { //  x
-        if(x>0)
-            return 1.0/1 * (F[x][y]-F[x-1][y]);
-        else
-            return 0.0; // 1.0/1 * (F(x+1,y,z)-F(x,y,z));
-    }
-    else if (index==1) { // y
-        if(y>0)
-            return 1.0/1.0 * (F[x][y]-F[x][y-1]);
-        else
-            return 0.0; // 1.0/1.0 * (F(x,y+1,z)-F(x,y,z));
-    }
-    // NOT REACHED
-    return 0.0;
+  if(index==0) { //  x
+    if(x>0)
+    return 1.0/1 * (F[x][y]-F[x-1][y]);
+    else
+    return 0.0; // 1.0/1 * (F(x+1,y,z)-F(x,y,z));
+  }
+  else if (index==1) { // y
+    if(y>0)
+    return 1.0/1.0 * (F[x][y]-F[x][y-1]);
+    else
+    return 0.0; // 1.0/1.0 * (F(x,y+1,z)-F(x,y,z));
+  }
+  // NOT REACHED
+  return 0.0;
 }
 
 /*
- * diff_p_v:
- *      dérivé à droite (p <-> plus)
- *
- */
+* diff_p_v:
+*      dérivé à droite (p <-> plus)
+*
+*/
 std::vector<std::vector<double>> LevelSet_v::diff_p_v(const std::vector<std::vector<double>>& F, int index) const
 {
-    std::vector<std::vector<double>> diff_v = F;
-    for (int i=0; i<diff_v.size(); i++)
+  std::vector<std::vector<double>> diff_v = F;
+  for (int i=0; i<diff_v.size(); i++)
+  {
+    for(int j=0; j<diff_v[0].size(); j++ )
     {
-      for(int j=0; j<diff_v[0].size(); j++ )
-      {
-        diff_v[i][j] = 0.;
-      }
+      diff_v[i][j] = 0.;
     }
+  }
 
-    for (int  i=0; i<F.size(); ++i)
-        for (int  j=0; j<F[0].size(); ++j)
-            diff_v[i][j] = diff_p_v(F, index, i, j);
-    return diff_v;
+  for (int  i=0; i<F.size(); ++i)
+  for (int  j=0; j<F[0].size(); ++j)
+  diff_v[i][j] = diff_p_v(F, index, i, j);
+  return diff_v;
 }
 
 double LevelSet_v::diff_p_v(const std::vector<std::vector<double>>& F, int index, int x, int y) const
 {
-    if (index==0) { //  x
-        if(x<F.size()-1)
-            return 1.0/1 * (F[x+1][y]-F[x][y]);
-        else
-            return 0.0; // 1.0/1 * (F(x,y,z)-F(x-1,y,z));
-    }
-    else if (index==1){ // y
-        if(y<F[0].size()-1)
-            return 1.0/1.0 * (F[x][y+1]-F[x][y]);
-        else
-            return 0.0; // 1.0/1.0 * (F(x,y,z)-F(x,y-1,z));
+  if (index==0) { //  x
+    if(x<F.size()-1)
+    return 1.0/1 * (F[x+1][y]-F[x][y]);
+    else
+    return 0.0; // 1.0/1 * (F(x,y,z)-F(x-1,y,z));
+  }
+  else if (index==1){ // y
+    if(y<F[0].size()-1)
+    return 1.0/1.0 * (F[x][y+1]-F[x][y]);
+    else
+    return 0.0; // 1.0/1.0 * (F(x,y,z)-F(x,y-1,z));
 
-    }
-    // NOT REACHED
-    return 0.0;
+  }
+  // NOT REACHED
+  return 0.0;
 }
 
 //fonction max min

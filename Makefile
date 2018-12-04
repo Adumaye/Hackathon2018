@@ -1,11 +1,11 @@
 # Compilateur Utilisé
-CC = mpic++
+CC = pgc++
 
 # Options en mode optimisé - La variable DEBUG est définie comme fausse
-OPTIM_FLAG = -O3 -DNDEBUG -w -I Eigen/Eigen -std=c++11 -acc -ta=tesla:managed -Minfo=accel
+OPTIM_FLAG = -O3 -DNDEBUG -w -I Eigen/Eigen -std=c++11
 
 # Options en mode debug - La variable DEBUG est définie comme vraie
-DEBUG_FLAG = -g3 -DDEBUG  -I Eigen/Eigen -ltiff -lm -lpthread -std=c++11 -w -acc -ta=tesla:managed -Minfo=accel
+DEBUG_FLAG = -g -DDEBUG  -I Eigen/Eigen -ltiff -lm -lpthread -std=c++11 -w
 
 # Librairies à linker (création executable)
 LIB = -ltiff -lm -lpthread
@@ -14,7 +14,7 @@ LIB = -ltiff -lm -lpthread
 CXX_FLAGS = $(OPTIM_FLAG)
 
 #Plafrim
-PLAFRIM_FLAG = -O3 -DNDEBUG -w -I eigen/Eigen -DEIGEN_DONT_VECTORIZE -std=c++11 -acc -ta=tesla:managed -Minfo=accel
+PLAFRIM_FLAG = -O3 -DNDEBUG -w -I ../eigen/Eigen -DEIGEN_DONT_VECTORIZE -std=c++11 -acc -ta=tesla:managed -Minfo=accel -Mneginfo PGI_ACC_NOTIFY=3
 
 # Le nom de l'exécutable
 PROGFilter = mainFilter
@@ -25,7 +25,7 @@ PROGSegmentationPlaf = mainSegmentationPlaf
 SRC = LevelSet.cpp InitMask.cpp ChanVeseSchemes.cpp Image.cpp Util.cpp LevelSet_v.cpp
 SRCMainFilter = mainFilter.cc
 SRCMainSegmen = mainSegmentation.cc
-SRCCompilFilter = mainFilter.o LevelSet.o InitMask.o ChanVeseSchemes.o Image.o Util.o
+SRCCompilFilter = mainFilter.o LevelSet.o InitMask.o ChanVeseSchemes.o Image.o Util.o LevelSet_v.o
 SRCCompilSegmen = mainSegmentation.o LevelSet.o InitMask.o ChanVeseSchemes.o Image.o Util.o LevelSet_v.o
 
 # La commande complète : compile seulement si un fichier a été modifié
@@ -40,11 +40,11 @@ $(PROGFilter) : $(SRC) $(SRCMainFilter)
 #Pour PlafRIM
 $(PROGSegmentationPlaf) : $(SRC) $(SRCMainSegmen)
 	$(CC) -c $(SRC) $(SRCMainSegmen) $(PLAFRIM_FLAG)
-	$(CC) -o $(PROGSegmentation) $(SRCCompilSegmen) $(LIB)
+	$(CC) -o $(PROGSegmentation) $(SRCCompilSegmen) $(LIB) -ta=tesla:cc35
 
 $(PROGFilterPlaf) : $(SRC) $(SRCMainFilter)
 	$(CC) -c $(SRC) $(SRCMainFilter) $(PLAFRIM_FLAG)
-	$(CC) -o $(PROGFilter) $(SRCCompilFilter) $(LIB)
+	$(CC) -o $(PROGFilter) $(SRCCompilFilter) $(LIB) -ta=tesla:cc35
 
 # Évite de devoir connaitre le nom de l'exécutable
 all : $(PROGFilter)	$(PROGSegmentation)
