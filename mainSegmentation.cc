@@ -26,6 +26,9 @@ int main(int argc, char** argv)
   config_t c;
   parseFile(argv[1],c);
 
+  //Début du Temps
+  auto start = chrono::high_resolution_clock::now();
+
   // Construction des différents noms de fichiers de sortie
   std::string extension(c.imageName);
   extension = extension.substr(extension.find_last_of(".") + 1);
@@ -57,7 +60,7 @@ int main(int argc, char** argv)
 
   field u_0 = image->GetImage();
 
-// Creation des myvector
+  // Creation des myvector
 
   myvector<double> u0_myvector(rows*cols);
 
@@ -78,7 +81,7 @@ int main(int argc, char** argv)
   {
     for (int j=0; j<ny; j++)
     {
-      phi_myvector[i*ny+j]= u_0(i,j);
+      phi_myvector[i*ny+j]= phi_v[i][j];
     }
   }
 
@@ -91,14 +94,7 @@ int main(int argc, char** argv)
   // newphi_myvector
   myvector<double> newphi_myvector(nx*ny);
 
-  for (int i=0; i<nx; i++)
-  {
-    for (int j=0; j<ny; j++)
-    {
-      phi_myvector[i*ny+j]=phi_v[i][j];
-    }
-  }
-// Fin de création de MyVector
+  // Fin de création de MyVector
 
   // Chan Vese method
   std::cout << "-------------------------------------------------" << std::endl;
@@ -117,8 +113,6 @@ int main(int argc, char** argv)
   double C2(0.);
   std::pair<double,double> Correction;
 
-  //Début du Temps
-  auto start = chrono::high_resolution_clock::now();
 
   if (scheme == "ExplicitScheme")
   {
@@ -126,22 +120,44 @@ int main(int argc, char** argv)
     Correction = chanVese->Correction(phi_v);
     C1= Correction.first;
     C2= Correction.second;
-    newphi_myvector = chanVese->ExplicitScheme_myvector(phi_myvector,u0_myvector,c.dt,c.mu,c.nu,c.l1,c.l2, C1, C2, nx, ny);
+    // newphi_myvector = chanVese->ExplicitScheme_myvector(phi_myvector,u0_myvector,c.dt,c.mu,c.nu,c.l1,c.l2, C1, C2, nx, ny);
+
+
+    const double hx(1.), hy(1.0);
+    const double eta(1e-8);
+
+    #pragma acc parallel loop tile(32,32) copyin(phi_myvector[0:nx*ny-1],newphi_myvector[0:nx*ny-1], u0_myvector[0:nx*ny-1]) copyout(newphi_myvector[0:nx*ny-1])
+    for (int i=1; i<nx*ny-1; i++)
+    {
+      double firstterm   = 1.;// (chanVese->fdxplus_myvector(i,phi_myvector,hx,nx)*chanVese->coeffA_myvector(i,phi_myvector,hx,hy,eta,nx) - chanVese->fdxminus_myvector(i,phi_myvector,hx,nx)*chanVese->coeffA_myvector(i-ny,phi_myvector,hx,hy,eta,nx));
+      double secondterm  =2.;// (chanVese->fdyplus_myvector(i,phi_myvector,hy,nx)*chanVese->coeffB_myvector(i,phi_myvector,hx,hy,eta,nx) - chanVese->fdyminus_myvector(i,phi_myvector,hy,nx)*chanVese->coeffB_myvector(i-1,phi_myvector,hx,hy,eta,nx));
+      double correc      = -3.;//-c.l1*(u0_myvector[i]-C1)*(u0_myvector[i]-C1) + c.l2*(u0_myvector[i]-C2)*(u0_myvector[i]-C2);
+      // double diracij     = 3./(pow(phi_myvector[i],2)+pow(3.,2));
+      // newphi_myvector[i] = phi_myvector[i] + ((firstterm+secondterm)- 1. + correc);
+      newphi_myvector[i] = 45.;
+    }
+    // #pragma acc update self(newphi_myvector[0:nx*ny-1])
+
     std::cout << "Fin myvector" << std::endl;
 
-    std::cout << "taille de newphi_v" << newphi_v.size() << "et" << newphi_v[0].size() << std::endl;
-    std::cout << "taille de newphi_myvector" << newphi_myvector.size() << std::endl;
+    // std::cout << "taille de newphi_v" << newphi_v.size() << "et" << newphi_v[0].size() << std::endl;
+    // std::cout << "taille de newphi_myvector" << newphi_myvector.size() << std::endl;
 
     for (int i=0; i<nx; i++)
     {
       for (int j=0; j<ny;j++)
       {
         newphi_v[i][j]=newphi_myvector[i*ny+j];
+        if (newphi_v[i][j] != 0.) { std::cout << "newphi_v vaut : " << newphi_v[i][j] <<std::endl;}
+        if (newphi_myvector[i*ny+j] != 0.) { std::cout << "newphi_myvector vaut : " << newphi_myvector[i*ny+j] <<std::endl;}
+
       }
     }
+    std::cout << " 0 le reste" << std::endl;
+
     // CL
-    int nx(phi_v.size());
-    int ny(phi_v[0].size());
+    // int nx(phi_v.size());
+    // int ny(phi_v[0].size());
 
     for (int j=0; j<ny; ++j)
     {
@@ -164,12 +180,16 @@ int main(int argc, char** argv)
   }
   double diff = chanVese->fdiff(phi_v, newphi_v);
 
+  std::cout << "diff = " << diff << std::endl;
+
   phi_v = newphi_v;
   int i(2);
   // #pragma acc data copy(phi_v) create(newphi_v)
   {
     while ( (diff > 5e-6) && (i < 100) )
     {
+      std::cout << "I'm IN" << std::endl;
+
       if (i%10 == 0) { std::cout << "Iteration -- " << i << std::endl;}
       if (scheme == "ExplicitScheme")
       {
@@ -187,18 +207,18 @@ int main(int argc, char** argv)
         //   #pragma acc parallel
         //   {
         //     #pragma acc loop
-            for (int j=0; j<ny; ++j)
-            {
-              newphi_v[0][j]  = newphi_v[1][j];
-              newphi_v[nx-1][j] = newphi_v[nx-2][j];
-            }
+        for (int j=0; j<ny; ++j)
+        {
+          newphi_v[0][j]  = newphi_v[1][j];
+          newphi_v[nx-1][j] = newphi_v[nx-2][j];
+        }
 
-            // #pragma acc loop
-            for (int i=0; i<nx; ++i)
-            {
-              newphi_v[i][0]  = newphi_v[i][1];
-              newphi_v[i][ny-1] = newphi_v[i][ny-2];
-            }
+        // #pragma acc loop
+        for (int i=0; i<nx; ++i)
+        {
+          newphi_v[i][0]  = newphi_v[i][1];
+          newphi_v[i][ny-1] = newphi_v[i][ny-2];
+        }
         //   }
         //   #pragma acc update self(newphi_v)
         // }
@@ -241,22 +261,57 @@ int main(int argc, char** argv)
   saveVTKFile(phi_v, "Results/lastsol.vtk");
   image->WriteImage(chanVese->AbsGradPhi(newphi), (namewithoutextension + "_filtered_with_contour." + extension).c_str());
 
-  cout << "Fin de la segmentation pour l'image. !****Et bravo à Annabelle pour la petite Lise.****!" << endl;
+  cout << "Fin de la segmentation pour l'image. !" << endl;
+  cout << " " << endl;
+  cout << " " << endl;
+  cout << " " << endl;
+  cout << " " << endl;
+  cout << " " << endl;
+  cout << " " << endl;
+  cout << " *****************Et bravo à Annabelle pour la petite Lise****************** " << endl;
+  cout << " " << endl;
+  cout << " " << endl;
+  cout << " " << endl;
+  cout << " " << endl;
+  cout << " " << endl;
+  cout << " " << endl;
+  cout <<"         '''------,,-----------.-----\\          --- /      \\--------.---'     " << endl;
+  cout <<"          '''-----,,      -------.    \\.      /'   ''       \\    ---''        " << endl;
+  cout <<"             '''--,,              ''\\ \\     /    /     '    '-,  --'         " << endl;
+  cout <<"             ''--,,                     \\-- /   /'              ''-,, -')'     " << endl;
+  cout <<"                   ,,,              ,''      --'       ,-'''''--,,,  '\\ !,,   " << endl;
+  cout <<"                 ''                ,                  '   , --.    ''   !--'  " << endl;
+  cout <<"                      -'''  .'                     ,-' ,   '       '    !     " << endl;
+  cout <<"                          /'  ,-'                -'     ',        !  !! ',    " << endl;
+  cout <<"                         '  ,' .,.            ,-'                ,  ! !  !    " << endl;
+  cout <<"                           /  ,'  '''-,---,,-'                  ,  .' !  !    " << endl;
+  cout <<"                        ./'  ,'  .' /                          ,   !  '! ',   " << endl;
+  cout <<"                       !   .'   !   '-..                       !   '   !  !   " << endl;
+  cout <<"                       ',,  ,   '---... ''\\.                  !     ',,'   ,  " << endl;
+  cout <<"                          '. '         -'.  ''-.                  \\        ,  " << endl;
+  cout <<"                           '. '.          '\\    !            !      -,,-'   , " << endl;
+  cout <<"                             '  ',          ! !'                            ! " << endl;
+  cout <<"                              '.  '.       .' !               !             ! " << endl;
+  cout <<"                               ',   ',        '                '.          ,  " << endl;
+  cout <<"                                !  ! !                           '--------'   " << endl;
+  cout <<"                               .'  !                                          " << endl;
+  cout << " " << endl;
+  cout << " " << endl;
+  cout << " " << endl;
+  cout << " " << endl;
+  cout << " " << endl;
+  cout << " " << endl;
   // Fin chrono
   auto finish = chrono::high_resolution_clock::now();
   double t = chrono::duration_cast<chrono::microseconds>(finish-start).count();
   cout << "Le prog a mis " << t*0.000001 << " secondes a s'effectuer" << endl;
 
 
-  std::cout<<" 0 "<< std::endl;
-  u0_myvector.~myvector();
-  std::cout<<" 1"<< std::endl;
-
-  phi_myvector.~myvector();
-  std::cout<<" 2 "<< std::endl;
-
-  newphi_myvector.~myvector();
-  std::cout<<" 3 "<< std::endl;
+  // u0_myvector.~myvector();
+  //
+  // phi_myvector.~myvector();
+  //
+  // newphi_myvector.~myvector();
 
 
   return 0;

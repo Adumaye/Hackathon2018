@@ -15,7 +15,6 @@ public:
     #pragma acc enter data create(mydata[0:mysize])
   }
   ~myvector(){
-    std::cout<<" fin du game "<< std::endl;
     #pragma acc exit data delete(mydata[0:mysize],this)
     delete [] mydata;
   }
