@@ -62,8 +62,8 @@ public:
 	// myvector<double>  ExplicitScheme_myvector(myvector<double>& phi_v, myvector<double>& u0_myvector, const double dt,  const double mu, const double nu, const double l1,\
 	// 	 const double l2, const double C1, const double C2, int nx, int ny) const;
 
-	void ExplicitScheme_myvector(myvector<double>& newphi_v, const myvector<double>& phi_v, myvector<double>& u0_myvector, const double dt,  const double mu, const double nu, const double l1,\
-		 const double l2, const double C1, const double C2, int nx, int ny) const;
+	// void ExplicitScheme_myvector(myvector<double>& newphi_v, const myvector<double>& phi_v, myvector<double>& u0_myvector, const double dt,  const double mu, const double nu, const double l1,\
+	// 	 const double l2, const double C1, const double C2, int nx, int ny) const;
 
 
 	inline double fdxplus(int i,int j,const std::vector<std::vector<double>>& GrosPhi, double hx) const

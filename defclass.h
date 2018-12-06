@@ -1,4 +1,9 @@
 #ifndef _defclass
+#include <iostream>
+#include <fstream>
+#include <cmath>
+#include <stdio.h>
+#include <stdlib.h>
 template<typename vtype>
 class myvector
 {

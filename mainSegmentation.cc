@@ -12,12 +12,15 @@
 #include "Util.h"
 #include "LevelSet_v.h"
 #include "defclass.h"
+#include <cmath>
+#include <stdio.h>
+#include <stdlib.h>
 
 using namespace std;
 
 int main(int argc, char** argv)
 {
-  // Lecture du fichier de données
+  //Lecture du fichier de données
   if (argc < 2)
   {
     cout << "Il faut indiquer le nom du fichier de données." << endl;
@@ -75,6 +78,7 @@ int main(int argc, char** argv)
   int nx=phi_v.size();
   int ny=phi_v[0].size();
 
+
   myvector<double> phi_myvector(nx*ny);
 
   for (int i=0; i<nx; i++)
@@ -122,42 +126,28 @@ int main(int argc, char** argv)
     C2= Correction.second;
     // newphi_myvector = chanVese->ExplicitScheme_myvector(phi_myvector,u0_myvector,c.dt,c.mu,c.nu,c.l1,c.l2, C1, C2, nx, ny);
 
-
     const double hx(1.), hy(1.0);
     const double eta(1e-8);
 
-    #pragma acc parallel loop tile(32,32) copyin(phi_myvector[0:nx*ny-1],newphi_myvector[0:nx*ny-1], u0_myvector[0:nx*ny-1]) copyout(newphi_myvector[0:nx*ny-1])
+    #pragma acc parallel loop tile(32,32) copyin(phi_myvector[0:nx*nx-1],newphi_myvector[0:nx*ny-1]) copyout(newphi_myvector[0:nx*ny-1])
     for (int i=1; i<nx*ny-1; i++)
     {
-      double firstterm   = 1.;// (chanVese->fdxplus_myvector(i,phi_myvector,hx,nx)*chanVese->coeffA_myvector(i,phi_myvector,hx,hy,eta,nx) - chanVese->fdxminus_myvector(i,phi_myvector,hx,nx)*chanVese->coeffA_myvector(i-ny,phi_myvector,hx,hy,eta,nx));
-      double secondterm  =2.;// (chanVese->fdyplus_myvector(i,phi_myvector,hy,nx)*chanVese->coeffB_myvector(i,phi_myvector,hx,hy,eta,nx) - chanVese->fdyminus_myvector(i,phi_myvector,hy,nx)*chanVese->coeffB_myvector(i-1,phi_myvector,hx,hy,eta,nx));
-      double correc      = -3.;//-c.l1*(u0_myvector[i]-C1)*(u0_myvector[i]-C1) + c.l2*(u0_myvector[i]-C2)*(u0_myvector[i]-C2);
-      // double diracij     = 3./(pow(phi_myvector[i],2)+pow(3.,2));
-      // newphi_myvector[i] = phi_myvector[i] + ((firstterm+secondterm)- 1. + correc);
-      newphi_myvector[i] = 45.;
+      double firstterm   = (chanVese->fdxplus_myvector(i,phi_myvector,hx,nx)*chanVese->coeffA_myvector(i,phi_myvector,hx,hy,eta,nx) - chanVese->fdxminus_myvector(i,phi_myvector,hx,nx)*chanVese->coeffA_myvector(i-ny,phi_myvector,hx,hy,eta,nx));
+      double secondterm  = (chanVese->fdyplus_myvector(i,phi_myvector,hy,nx)*chanVese->coeffB_myvector(i,phi_myvector,hx,hy,eta,nx) - chanVese->fdyminus_myvector(i,phi_myvector,hy,nx)*chanVese->coeffB_myvector(i-1,phi_myvector,hx,hy,eta,nx));
+      double correc      = -c.l1*(u0_myvector[i]-C1)*(u0_myvector[i]-C1) + c.l2*(u0_myvector[i]-C2)*(u0_myvector[i]-C2);
+      double diracij     = (pow(phi_myvector[i],2)+pow(3.,2));
+      newphi_myvector[i] = phi_myvector[i] + diracij*c.dt*((firstterm+secondterm)- 1. + correc);
     }
-    // #pragma acc update self(newphi_myvector[0:nx*ny-1])
-
-    std::cout << "Fin myvector" << std::endl;
-
-    // std::cout << "taille de newphi_v" << newphi_v.size() << "et" << newphi_v[0].size() << std::endl;
-    // std::cout << "taille de newphi_myvector" << newphi_myvector.size() << std::endl;
 
     for (int i=0; i<nx; i++)
     {
       for (int j=0; j<ny;j++)
       {
         newphi_v[i][j]=newphi_myvector[i*ny+j];
-        if (newphi_v[i][j] != 0.) { std::cout << "newphi_v vaut : " << newphi_v[i][j] <<std::endl;}
-        if (newphi_myvector[i*ny+j] != 0.) { std::cout << "newphi_myvector vaut : " << newphi_myvector[i*ny+j] <<std::endl;}
-
       }
     }
-    std::cout << " 0 le reste" << std::endl;
 
     // CL
-    // int nx(phi_v.size());
-    // int ny(phi_v[0].size());
 
     for (int j=0; j<ny; ++j)
     {
@@ -173,6 +163,7 @@ int main(int argc, char** argv)
     std::cout << "Fin CL" << std::endl;
 
     // Fin CL
+
   }
   else
   {
@@ -188,11 +179,10 @@ int main(int argc, char** argv)
   {
     while ( (diff > 5e-6) && (i < 100) )
     {
-      std::cout << "I'm IN" << std::endl;
-
       if (i%10 == 0) { std::cout << "Iteration -- " << i << std::endl;}
       if (scheme == "ExplicitScheme")
       {
+        std::cout << "I AM IN" << std::endl;
         Correction = chanVese->Correction(phi_v);
         C1= Correction.first;
         C2= Correction.second;
@@ -262,45 +252,45 @@ int main(int argc, char** argv)
   image->WriteImage(chanVese->AbsGradPhi(newphi), (namewithoutextension + "_filtered_with_contour." + extension).c_str());
 
   cout << "Fin de la segmentation pour l'image. !" << endl;
-  cout << " " << endl;
-  cout << " " << endl;
-  cout << " " << endl;
-  cout << " " << endl;
-  cout << " " << endl;
-  cout << " " << endl;
-  cout << " *****************Et bravo à Annabelle pour la petite Lise****************** " << endl;
-  cout << " " << endl;
-  cout << " " << endl;
-  cout << " " << endl;
-  cout << " " << endl;
-  cout << " " << endl;
-  cout << " " << endl;
-  cout <<"         '''------,,-----------.-----\\          --- /      \\--------.---'     " << endl;
-  cout <<"          '''-----,,      -------.    \\.      /'   ''       \\    ---''        " << endl;
-  cout <<"             '''--,,              ''\\ \\     /    /     '    '-,  --'         " << endl;
-  cout <<"             ''--,,                     \\-- /   /'              ''-,, -')'     " << endl;
-  cout <<"                   ,,,              ,''      --'       ,-'''''--,,,  '\\ !,,   " << endl;
-  cout <<"                 ''                ,                  '   , --.    ''   !--'  " << endl;
-  cout <<"                      -'''  .'                     ,-' ,   '       '    !     " << endl;
-  cout <<"                          /'  ,-'                -'     ',        !  !! ',    " << endl;
-  cout <<"                         '  ,' .,.            ,-'                ,  ! !  !    " << endl;
-  cout <<"                           /  ,'  '''-,---,,-'                  ,  .' !  !    " << endl;
-  cout <<"                        ./'  ,'  .' /                          ,   !  '! ',   " << endl;
-  cout <<"                       !   .'   !   '-..                       !   '   !  !   " << endl;
-  cout <<"                       ',,  ,   '---... ''\\.                  !     ',,'   ,  " << endl;
-  cout <<"                          '. '         -'.  ''-.                  \\        ,  " << endl;
-  cout <<"                           '. '.          '\\    !            !      -,,-'   , " << endl;
-  cout <<"                             '  ',          ! !'                            ! " << endl;
-  cout <<"                              '.  '.       .' !               !             ! " << endl;
-  cout <<"                               ',   ',        '                '.          ,  " << endl;
-  cout <<"                                !  ! !                           '--------'   " << endl;
-  cout <<"                               .'  !                                          " << endl;
-  cout << " " << endl;
-  cout << " " << endl;
-  cout << " " << endl;
-  cout << " " << endl;
-  cout << " " << endl;
-  cout << " " << endl;
+  // cout << " " << endl;
+  // cout << " " << endl;
+  // cout << " " << endl;
+  // cout << " " << endl;
+  // cout << " " << endl;
+  // cout << " " << endl;
+  // cout << " *****************Et bravo à Annabelle pour la petite Lise****************** " << endl;
+  // cout << " " << endl;
+  // cout << " " << endl;
+  // cout << " " << endl;
+  // cout << " " << endl;
+  // cout << " " << endl;
+  // cout << " " << endl;
+  // cout <<"         '''------,,-----------.-----\\          --- /      \\--------.---'     " << endl;
+  // cout <<"          '''-----,,      -------.    \\.      /'   ''       \\    ---''        " << endl;
+  // cout <<"             '''--,,              ''\\ \\     /    /     '    '-,  --'         " << endl;
+  // cout <<"             ''--,,                     \\-- /   /'              ''-,, -')'     " << endl;
+  // cout <<"                   ,,,              ,''      --'       ,-'''''--,,,  '\\ !,,   " << endl;
+  // cout <<"                 ''                ,                  '   , --.    ''   !--'  " << endl;
+  // cout <<"                      -'''  .'                     ,-' ,   '       '    !     " << endl;
+  // cout <<"                          /'  ,-'                -'     ',        !  !! ',    " << endl;
+  // cout <<"                         '  ,' .,.            ,-'                ,  ! !  !    " << endl;
+  // cout <<"                           /  ,'  '''-,---,,-'                  ,  .' !  !    " << endl;
+  // cout <<"                        ./'  ,'  .' /                          ,   !  '! ',   " << endl;
+  // cout <<"                       !   .'   !   '-..                       !   '   !  !   " << endl;
+  // cout <<"                       ',,  ,   '---... ''\\.                  !     ',,'   ,  " << endl;
+  // cout <<"                          '. '         -'.  ''-.                  \\        ,  " << endl;
+  // cout <<"                           '. '.          '\\    !            !      -,,-'   , " << endl;
+  // cout <<"                             '  ',          ! !'                            ! " << endl;
+  // cout <<"                              '.  '.       .' !               !             ! " << endl;
+  // cout <<"                               ',   ',        '                '.          ,  " << endl;
+  // cout <<"                                !  ! !                           '--------'   " << endl;
+  // cout <<"                               .'  !                                          " << endl;
+  // cout << " " << endl;
+  // cout << " " << endl;
+  // cout << " " << endl;
+  // cout << " " << endl;
+  // cout << " " << endl;
+  // cout << " " << endl;
   // Fin chrono
   auto finish = chrono::high_resolution_clock::now();
   double t = chrono::duration_cast<chrono::microseconds>(finish-start).count();

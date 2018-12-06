@@ -13,8 +13,7 @@ LIB = -ltiff -lm -lpthread
 # On choisit comment on compile
 CXX_FLAGS = $(OPTIM_FLAG)
 
-#Plafrim
-PLAFRIM_FLAG = -O3 -DNDEBUG -w -I ../eigen/Eigen -DEIGEN_DONT_VECTORIZE -std=c++11 -acc -ta=tesla:managed -Minfo=accel -Mneginfo
+PLAFRIM_FLAG = -DNDEBUG -ta=tesla:managed -I ../eigen/Eigen -Minfo=accel -acc -O3 -w -std=c++11
 
 # Le nom de l'exécutable
 PROGFilter = mainFilter
@@ -22,42 +21,43 @@ PROGSegmentation = mainSegmentation
 PROGFilterPlaf = mainFilterPlaf
 PROGSegmentationPlaf = mainSegmentationPlaf
 # Les fichiers source à compiler
-SRC = LevelSet.cpp InitMask.cpp ChanVeseSchemes.cpp Image.cpp Util.cpp LevelSet_v.cpp
+SRC = InitMask.cpp ChanVeseSchemes.cpp Image.cpp Util.cpp LevelSet_v.cpp
 SRCMainFilter = mainFilter.cc
 SRCMainSegmen = mainSegmentation.cc
-SRCCompilFilter = mainFilter.o LevelSet.o InitMask.o ChanVeseSchemes.o Image.o Util.o LevelSet_v.o
-SRCCompilSegmen = mainSegmentation.o LevelSet.o InitMask.o ChanVeseSchemes.o Image.o Util.o LevelSet_v.o
+SRCCompilFilter = mainFilter.o InitMask.o ChanVeseSchemes.o Image.o Util.o LevelSet_v.o
+SRCCompilSegmen = mainSegmentation.o InitMask.o ChanVeseSchemes.o Image.o Util.o LevelSet_v.o
 
 # La commande complète : compile seulement si un fichier a été modifié
 $(PROGSegmentation) : $(SRC) $(SRCMainSegmen)
-	$(CC) -c $(SRC) $(SRCMainSegmen) $(CXX_FLAGS)
-	$(CC) -o $(PROGSegmentation) $(SRCCompilSegmen) $(LIB)
+        $(CC) -c $(SRC) $(SRCMainSegmen) $(CXX_FLAGS)
+        $(CC) -o $(PROGSegmentation) $(SRCCompilSegmen) $(LIB)
 
 $(PROGFilter) : $(SRC) $(SRCMainFilter)
-	$(CC) -c $(SRC) $(SRCMainFilter) $(CXX_FLAGS)
-	$(CC) -o $(PROGFilter) $(SRCCompilFilter) $(LIB)
+        $(CC) -c $(SRC) $(SRCMainFilter) $(CXX_FLAGS)
+        $(CC) -o $(PROGFilter) $(SRCCompilFilter) $(LIB)
 
 #Pour PlafRIM
 $(PROGSegmentationPlaf) : $(SRC) $(SRCMainSegmen)
-	$(CC) -c $(SRC) $(SRCMainSegmen) $(PLAFRIM_FLAG)
-	$(CC) -o $(PROGSegmentation) $(SRCCompilSegmen) $(LIB) -ta=tesla:cc35
+        $(CC) $(PLAFRIM_FLAG) -c $(SRC) $(SRCMainSegmen)
+        $(CC) -o $(PROGSegmentation) $(SRCCompilSegmen) $(LIB) -ta=tesla:managed
 
 $(PROGFilterPlaf) : $(SRC) $(SRCMainFilter)
-	$(CC) -c $(SRC) $(SRCMainFilter) $(PLAFRIM_FLAG)
-	$(CC) -o $(PROGFilter) $(SRCCompilFilter) $(LIB) -ta=tesla:cc35
+        $(CC) $(PLAFRIM_FLAG) -c $(SRC) $(SRCMainFilter)
+        $(CC) -o $(PROGFilter) $(SRCCompilFilter) $(LIB) -ta=tesla:managed
 
 # Évite de devoir connaitre le nom de l'exécutable
-all : $(PROGFilter)	$(PROGSegmentation)
+all : $(PROGFilter)     $(PROGSegmentation)
 filter : $(PROGFilter)
 segment : $(PROGSegmentation)
 
-plafrim : $(PROGFilterPlaf)	$(PROGSegmentationPlaf)
+plafrim : $(PROGFilterPlaf)     $(PROGSegmentationPlaf)
 
 # Supprime l'exécutable, les fichiers binaires (.o) et les fichiers
 # temporaires de sauvegarde (~)
 clean :
-	rm -f *.o *~ $(PROGFilter) *~ $(PROGSegmentation)
+        rm -f *.o *~ $(PROGFilter) *~ $(PROGSegmentation)
 
 cleanall :
-	rm -f *.o *~ $(PROGFilter) *~ $(PROGSegmentation)
-	rm -rf ../Images/fileint1_aft_preprocess_*
+        rm -f *.o *~ $(PROGFilter) *~ $(PROGSegmentation)
+        #rm -rf ../Images/fileint1_aft_preprocess_filtered.tiff
+        rm -rf ../Images/fileint1_aft_preprocess_filtered_distance_mask.vtk

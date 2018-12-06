@@ -204,24 +204,23 @@ std::vector<std::vector<double>>  ChanVeseSchemes::ExplicitScheme(const std::vec
 // }
 
 
-void ChanVeseSchemes::ExplicitScheme_myvector(myvector<double>& newphi_v,const myvector<double>& phi_v, myvector<double>& u0_myvector, const double dt,  const double mu, const double nu, const double l1, const double l2, const double C1, const double C2, int nx, int ny) const
-{
-	// #pragma acc routine
-	const double hx(1.), hy(1.0);
-	const double eta(1e-8);
-
-	myvector<double> phiint_v(nx*ny);
-	// double eps(3.);
-	 	#pragma acc parallel loop tile(32,32) copyin(phi_v[0:nx*ny-1],phiint_v[0:nx*ny-1], u0_myvector[0:nx*ny-1]) copyout(phiint_v[0:nx*ny-1])
-		for (int i=1; i<ny*nx-1; ++i)
-		{
-				// double firstterm   = (fdxplus_myvector(i,phi_v,hx,nx)*coeffA_myvector(i,phi_v,hx,hy,eta,nx) - fdxminus_myvector(i,phi_v,hx,nx)*coeffA_myvector(i-ny,phi_v,hx,hy,eta,nx));
-				// double secondterm  = (fdyplus_myvector(i,phi_v,hy,nx)*coeffB_myvector(i,phi_v,hx,hy,eta,nx) - fdyminus_myvector(i,phi_v,hy,nx)*coeffB_myvector(i-1,phi_v,hx,hy,eta,nx));
-				// double correc      = -l1*(u0_myvector[i]-C1)*(u0_myvector[i]-C1) + l2*(u0_myvector[i]-C2)*(u0_myvector[i]-C2);
-				// double diracij     = eps/(pow(phi_v[i],2)+pow(eps,2));
-				// phiint_v[i] = phi_v[i] + dt*diracij*(mu*(firstterm+secondterm)- nu + correc);
-				phiint_v[i] = phi_v[i] + 3. + 4./2.;
-		}
+// void ChanVeseSchemes::ExplicitScheme_myvector(myvector<double>& newphi_v,const myvector<double>& phi_v, myvector<double>& u0_myvector, const double dt,  const double mu, const double nu, const double l1, const double l2, const double C1, const double C2, int nx, int ny) const
+// {
+// 	// #pragma acc routine
+// 	const double hx(1.), hy(1.0);
+// 	const double eta(1e-8);
+//
+// 	myvector<double> phiint_v(nx*ny);
+// 	// double eps(3.);
+// 		for (int i=1; i<ny*nx-1; ++i)
+// 		{
+// 				// double firstterm   = (fdxplus_myvector(i,phi_v,hx,nx)*coeffA_myvector(i,phi_v,hx,hy,eta,nx) - fdxminus_myvector(i,phi_v,hx,nx)*coeffA_myvector(i-ny,phi_v,hx,hy,eta,nx));
+// 				// double secondterm  = (fdyplus_myvector(i,phi_v,hy,nx)*coeffB_myvector(i,phi_v,hx,hy,eta,nx) - fdyminus_myvector(i,phi_v,hy,nx)*coeffB_myvector(i-1,phi_v,hx,hy,eta,nx));
+// 				// double correc      = -l1*(u0_myvector[i]-C1)*(u0_myvector[i]-C1) + l2*(u0_myvector[i]-C2)*(u0_myvector[i]-C2);
+// 				// double diracij     = eps/(pow(phi_v[i],2)+pow(eps,2));
+// 				// phiint_v[i] = phi_v[i] + dt*diracij*(mu*(firstterm+secondterm)- nu + correc);
+// 				phiint_v[i] = phi_v[i] + 3. + 4./2.;
+// 		}
 }
 
 #endif
