@@ -29,21 +29,21 @@ SRCCompilSegmen = mainSegmentation.o InitMask.o ChanVeseSchemes.o Image.o Util.o
 
 # La commande complète : compile seulement si un fichier a été modifié
 $(PROGSegmentation) : $(SRC) $(SRCMainSegmen)
-        $(CC) -c $(SRC) $(SRCMainSegmen) $(CXX_FLAGS)
-        $(CC) -o $(PROGSegmentation) $(SRCCompilSegmen) $(LIB)
+	$(CC) -c $(SRC) $(SRCMainSegmen) $(CXX_FLAGS)
+	$(CC) -o $(PROGSegmentation) $(SRCCompilSegmen) $(LIB)
 
 $(PROGFilter) : $(SRC) $(SRCMainFilter)
-        $(CC) -c $(SRC) $(SRCMainFilter) $(CXX_FLAGS)
-        $(CC) -o $(PROGFilter) $(SRCCompilFilter) $(LIB)
+	$(CC) -c $(SRC) $(SRCMainFilter) $(CXX_FLAGS)
+	$(CC) -o $(PROGFilter) $(SRCCompilFilter) $(LIB)
 
 #Pour PlafRIM
 $(PROGSegmentationPlaf) : $(SRC) $(SRCMainSegmen)
-        $(CC) $(PLAFRIM_FLAG) -c $(SRC) $(SRCMainSegmen)
-        $(CC) -o $(PROGSegmentation) $(SRCCompilSegmen) $(LIB) -ta=tesla:managed
+	$(CC) $(PLAFRIM_FLAG) -c $(SRC) $(SRCMainSegmen)
+	$(CC) -o $(PROGSegmentation) $(SRCCompilSegmen) $(LIB) -ta=tesla:managed
 
 $(PROGFilterPlaf) : $(SRC) $(SRCMainFilter)
-        $(CC) $(PLAFRIM_FLAG) -c $(SRC) $(SRCMainFilter)
-        $(CC) -o $(PROGFilter) $(SRCCompilFilter) $(LIB) -ta=tesla:managed
+	$(CC) $(PLAFRIM_FLAG) -c $(SRC) $(SRCMainFilter)
+	$(CC) -o $(PROGFilter) $(SRCCompilFilter) $(LIB) -ta=tesla:managed
 
 # Évite de devoir connaitre le nom de l'exécutable
 all : $(PROGFilter)     $(PROGSegmentation)
@@ -55,9 +55,9 @@ plafrim : $(PROGFilterPlaf)     $(PROGSegmentationPlaf)
 # Supprime l'exécutable, les fichiers binaires (.o) et les fichiers
 # temporaires de sauvegarde (~)
 clean :
-        rm -f *.o *~ $(PROGFilter) *~ $(PROGSegmentation)
+	rm -f *.o *~ $(PROGFilter) *~ $(PROGSegmentation)
 
 cleanall :
-        rm -f *.o *~ $(PROGFilter) *~ $(PROGSegmentation)
-        #rm -rf ../Images/fileint1_aft_preprocess_filtered.tiff
-        rm -rf ../Images/fileint1_aft_preprocess_filtered_distance_mask.vtk
+	rm -f *.o *~ $(PROGFilter) *~ $(PROGSegmentation)
+	#rm -rf ../Images/fileint1_aft_preprocess_filtered.tiff
+	rm -rf ../Images/fileint1_aft_preprocess_filtered_distance_mask.vtk
